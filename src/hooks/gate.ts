@@ -1,5 +1,5 @@
 import { loadConfig, trackedProject } from '../core/config.js'
-import { readState } from '../core/store.js'
+import { readState, touchTask } from '../core/store.js'
 import { LEVEL_NAMES } from '../core/types.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 
@@ -86,6 +86,8 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     }
 
     // Level 2 is allowed through here; the skeleton check verifies it after the write.
+    // Touching keeps this task alive so the boundary measures silence, not age.
+    touchTask(state)
     return { type: 'allow' }
   } catch {
     // Fail open, always.

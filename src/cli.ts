@@ -6,6 +6,7 @@ import {
   cmdPredict,
   cmdRush,
   cmdSuggestLevel,
+  cmdNext,
 } from './commands/session.js'
 import { cmdLog } from './commands/log.js'
 import { cmdDone } from './commands/done.js'
@@ -21,6 +22,7 @@ const HELP = `spar — keep learning while AI writes the code
   spar mark --session <id> --trivial
   spar rush --session <id> [--off]
   spar done --session <id>
+  spar next --session <id>
   spar log --session <id> --concept <c> --model <what you thought> --reality <what was true>
            [--kind misconception|typo-bug|improvement] [--question 1|2|3]
 
@@ -57,6 +59,8 @@ async function main(): Promise<number> {
       })
     case 'done':
       return cmdDone(requireSession(flags))
+    case 'next':
+      return cmdNext(requireSession(flags))
     case 'mark':
       return cmdMarkTrivial(requireSession(flags))
     case 'rush':

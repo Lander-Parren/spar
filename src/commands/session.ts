@@ -1,4 +1,4 @@
-import { readGaps, readState, writeState } from '../core/store.js'
+import { readGaps, readState, resetTask, writeState } from '../core/store.js'
 import { NO_IDEA, suggestLevel } from '../core/level.js'
 import { LEVEL_NAMES, type Level } from '../core/types.js'
 import { readFocus } from '../core/focus.js'
@@ -75,4 +75,11 @@ function normalizeAnswer(answer: string | undefined): string {
   const trimmed = (answer ?? '').trim()
   if (!trimmed) return NO_IDEA
   return /^(no idea|geen idee|dunno|idk|\?+)$/i.test(trimmed) ? NO_IDEA : trimmed
+}
+
+/** `spar next` — say out loud that this is new work, without waiting for the idle timer. */
+export function cmdNext(sessionId: string): number {
+  writeState(resetTask(readState(sessionId)))
+  console.log('new task — the gate will ask again on the next write')
+  return 0
 }

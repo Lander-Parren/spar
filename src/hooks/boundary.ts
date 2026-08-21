@@ -4,11 +4,14 @@ import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 import type { SessionState } from '../core/types.js'
 
 /**
- * Runs on every user prompt. Its only job: decide whether the gate should fire again.
+ * Runs on every user prompt. Its only job: decide whether the gate should re-arm.
  *
- * Get this wrong in one direction and spar interrogates you about "also rename that
- * variable". Get it wrong in the other and you predict once on Monday and coast all
- * week. This single function sets how the whole tool feels.
+ * The two mistakes here do not cost the same. Re-arming on a follow-up costs thirty
+ * seconds — but its real consequence is that you reach for `spar rush`, and an
+ * abandoned tool teaches nothing at all. Failing to re-arm on genuinely new work
+ * costs one gap, and that concept will come round again.
+ *
+ * So this leans, deliberately, towards "still the same task".
  */
 export function boundary(event: NormalizedEvent): NormalizedDecision {
   try {
@@ -18,7 +21,7 @@ export function boundary(event: NormalizedEvent): NormalizedDecision {
     const state = readState(event.sessionId)
     const prompt = event.prompt ?? ''
 
-    if (isNewTask(prompt, state)) {
+    if (isNewTask(state, config.idleMinutes * 60_000)) {
       writeState({ ...resetTask(state), taskPrompt: prompt })
     }
     return { type: 'noop' }
@@ -28,36 +31,28 @@ export function boundary(event: NormalizedEvent): NormalizedDecision {
 }
 
 /**
- * Is this prompt the start of new work, or a follow-up on what we are already doing?
+ * A task stays alive while there is movement in it, and expires on silence.
  *
- * Returning true re-arms the gate: the next write will stop and ask for a prediction.
- * Returning false lets the current task continue untouched.
+ * Note this measures idleness, not age: `predictedAt` is refreshed by the gate on
+ * every write it lets through. Without that refresh this would be "30 minutes since
+ * you predicted", which would interrupt a long careful task halfway — exactly when
+ * it is going well. With it, an active task keeps its prediction indefinitely and an
+ * abandoned one lapses.
  *
- * Signals available on `state`:
- *   state.taskPrompt            the prompt that opened the current task
- *   state.predicted             whether a prediction has been recorded yet
- *   state.predictedAt           ISO timestamp of that prediction
- *   state.editsSincePrediction  writes let through since then
+ * Time was chosen over reading the prompt text on purpose. A text heuristic sounds
+ * smarter and is more brittle: it is language-dependent (this ships publicly), easy
+ * to fool, and — worst of all — unpredictable. When the gate fires you should always
+ * know why it fired. Being occasionally strict beats being occasionally mysterious.
  *
- * TODO(spar): implement this. Roughly 5-10 lines. Some directions, with their costs:
- *
- *   A. Always true. Never misses a task; asks about trivia constantly.
- *   B. Text heuristic. Back-references ("also", "and now", "fix that", "it", very short
- *      prompts) read as follow-ups; a fresh imperative with a new noun reads as new work.
- *      Cheap and legible, but language-dependent and easy to fool.
- *   C. Elapsed time / edit count. Re-arm after N minutes or M edits since the prediction.
- *      Language-independent and dead simple, but a long careful task gets interrupted
- *      while a burst of unrelated small tasks slips through on one prediction.
- *   D. Hybrid: treat it as a follow-up only while the prediction is fresh AND the prompt
- *      back-references; otherwise re-arm.
- *
- * Whatever you pick, `/spar:stats` will later show how often the gate fired versus how
- * often you overrode it — so this is a decision you can revise from evidence, not taste.
+ * The threshold is one number in config, so it can be corrected later from what
+ * `/spar:stats` shows about how often you overrode the gate — evidence, not taste.
  */
-export function isNewTask(prompt: string, state: SessionState): boolean {
-  // Placeholder: option A, the bluntest one. Correct but maximally annoying —
-  // replace it once you have felt how often it fires.
-  void prompt
-  void state
-  return true
+export function isNewTask(state: SessionState, idleMs: number, now = Date.now()): boolean {
+  // Nothing predicted yet: the gate is already armed, nothing to decide.
+  if (!state.predicted || !state.predictedAt) return true
+
+  const last = Date.parse(state.predictedAt)
+  if (!Number.isFinite(last)) return true
+
+  return now - last > idleMs
 }

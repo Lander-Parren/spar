@@ -44,12 +44,15 @@ export interface Config {
   /** Language for the three questions and the gap log. Not the CLI's own output. */
   language: string
   focusDays: number
+  /** Minutes of silence on a task before the gate re-arms. See hooks/boundary.ts. */
+  idleMinutes: number
 }
 
 export const DEFAULT_CONFIG: Config = {
   projects: [],
   language: 'en',
   focusDays: 14,
+  idleMinutes: 30,
 }
 
 /** Per-session, per-task state. Reset when a new task starts. */

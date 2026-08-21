@@ -47,6 +47,19 @@ completely inert.
 There is no off switch, only level 0. The level is suggested from your own gap log,
 with the reason attached — you can always override it.
 
+## When does the gate fire?
+
+Once per task, not once per file — fifteen edits behind one prediction is one gate.
+
+A task stays alive while there is movement in it and lapses after 30 minutes of
+silence (`idleMinutes` in `~/.spar/config.json`). That measures idleness, not age, so
+a long careful task is never interrupted halfway. Starting something new before then?
+`spar next --session <id>`.
+
+This leans deliberately towards "still the same task". Re-arming on a follow-up costs
+you thirty seconds and pushes you towards `spar rush`; missing one task costs a single
+gap, and that concept will come round again.
+
 ## Privacy
 
 Everything is local, in `~/.spar/`. No account, no telemetry, no network. The log

@@ -19,6 +19,10 @@ export function loadConfig(): Config {
         typeof parsed.focusDays === 'number' && parsed.focusDays > 0
           ? parsed.focusDays
           : DEFAULT_CONFIG.focusDays,
+      idleMinutes:
+        typeof parsed.idleMinutes === 'number' && parsed.idleMinutes > 0
+          ? parsed.idleMinutes
+          : DEFAULT_CONFIG.idleMinutes,
     }
   } catch {
     return { ...DEFAULT_CONFIG, projects: [] }
