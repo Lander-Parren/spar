@@ -120,7 +120,7 @@ misconception. Not a gap count — that only ever climbs, and would read as decl
 while you improve. Below it the concept table, ordered by weakness. That order is your
 curriculum, and nobody chose it.
 
-![The spar dashboard](docs/dashboard.png)
+![The spar dashboard](https://raw.githubusercontent.com/Lander-Parren/spar/main/docs/dashboard.png)
 
 *Six weeks of a fictional .NET onboarding. The page follows your system theme.*
 
