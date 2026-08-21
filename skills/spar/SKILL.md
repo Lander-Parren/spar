@@ -120,11 +120,16 @@ Log the **concept and the shape of the misunderstanding, never the business logi
 No client names, no domain rules, no proprietary code. In a month what they need is
 the idea, not the fragment — and this is what keeps the log safe to show a colleague.
 
-Good: `"thought the repository decides the transaction boundary"` →
-`"the unit-of-work does; the repository is transaction-unaware"`, concept
-`"transaction boundaries in an ORM"`.
+**State the belief itself, with no framing words.** Views prefix these with "thought"
+and "actually", so `--model "thought the repository..."` reads as "thought thought
+the repository...".
 
-Bad: pasting the actual `PlaceOrderAsync` body.
+Good: `--model "the repository decides the transaction boundary"`
+      `--reality "the unit-of-work does; the repository is transaction-unaware"`
+      `--concept "transaction boundaries in an ORM"`
+
+Bad: `--model "they thought that maybe the repository..."` (framing, hedging)
+Bad: pasting the actual `PlaceOrderAsync` body (business logic, not a concept)
 
 ## Honesty rules
 

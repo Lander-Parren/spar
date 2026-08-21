@@ -13,6 +13,8 @@ import { cmdDone } from './commands/done.js'
 import { cmdPropose } from './commands/propose.js'
 import { cmdReview } from './commands/review.js'
 import { cmdStats } from './commands/stats.js'
+import { cmdDashboard } from './commands/dashboard.js'
+import { cmdFocus } from './commands/focus.js'
 import { cmdSetup } from './commands/setup.js'
 import type { GapKind, Level } from './core/types.js'
 
@@ -29,6 +31,8 @@ const HELP = `spar — keep learning while AI writes the code
   spar propose --session <id> --file <path> [--text <content>]   (or pipe on stdin)
   spar review --session <id> <gap-id> [--ok | --nok]
   spar stats [--json]
+  spar dashboard [--no-open]
+  spar focus ["<concept>" ...] [--clear]
   spar log --session <id> --concept <c> --model <what you thought> --reality <what was true>
            [--kind misconception|typo-bug|improvement] [--question 1|2|3]
 
@@ -71,6 +75,10 @@ async function main(): Promise<number> {
       )
     case 'stats':
       return cmdStats(flags.bool('json'))
+    case 'dashboard':
+      return cmdDashboard(!flags.bool('no-open'))
+    case 'focus':
+      return cmdFocus(flags.positional, flags.bool('clear'))
     case 'propose':
       return cmdPropose(requireSession(flags), required(flags.string('file'), '--file'), flags.string('text'))
     case 'done':

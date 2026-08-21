@@ -11,9 +11,9 @@ Those gaps become your curriculum. The concept you're wrong about most often ris
 the top on its own — and the friction moves there with it, so you never have to decide
 to work hard.
 
-> Status: slice 3 of 6 — the loop is closed. Gate, four levels, closing review,
-> spaced repetition, and `spar stats`. The dashboard and the second agent adapter
-> are still to come.
+> Status: slice 4 of 6 — feature-complete for one person. Gate, four levels,
+> closing review, spaced repetition, `spar stats` and the dashboard. The second
+> agent adapter, the MCP server and publishing are what remain.
 
 ## Install
 
@@ -57,13 +57,23 @@ never a queue and never an interruption. Answer it well and it moves up a box
 separate app and no inbox: it arrives in the session you were already in.
 
 ```sh
-spar stats
+spar stats        # in the terminal
+spar dashboard    # one self-contained HTML file, opens in your browser
 ```
 
 The headline is **calibration**: the share of your predictions that produced no
 misconception, week by week. Not a gap count — that only ever goes up, and would read
 as decline exactly while you improve. Below it sits the concept table, ordered by
 weakness. That order is your curriculum, and nobody chose it.
+
+The dashboard is one file with no network access of any kind — no CDN, no fonts, no
+chart library, hand-written SVG. It opens offline, from a double-click, in five years.
+Tick a concept to focus it and it hands you a `spar focus "..."` line to paste back;
+focused concepts get their level raised by one and their gaps come back first, and the
+focus expires after two weeks so that a priority list stays a priority list.
+
+There are no streaks, points or badges. In a tool where "no idea" is a valuable
+answer, a counter would only teach you to fake competence.
 
 ## When does the gate fire?
 

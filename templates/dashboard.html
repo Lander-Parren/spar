@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spar</title>
+<style>
+:root {
+  --bg: #fbfaf8; --panel: #ffffff; --line: #e6e2db; --ink: #1c1a17; --muted: #6f6960;
+  --accent: #3a6b4f; --accent-soft: #3a6b4f22; --warn: #9a5b2c; --grid: #eeeae3;
+  --l0: #cfc9c0; --l1: #8fb39c; --l2: #5c8f74; --l3: #2f5c44;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161513; --panel: #1e1d1a; --line: #2f2d29; --ink: #ece8e1; --muted: #989186;
+    --accent: #7fbf9a; --accent-soft: #7fbf9a22; --warn: #d79a63; --grid: #262421;
+    --l0: #45413c; --l1: #4d6f5c; --l2: #6ba185; --l3: #9ed4b5;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding: 0 0 5rem;
+}
+header { padding: 2.5rem 1.5rem 1rem; max-width: 62rem; margin: 0 auto; }
+h1 { margin: 0; font-size: 1.6rem; letter-spacing: -.02em; font-weight: 620; }
+.sub { color: var(--muted); font-size: .85rem; margin-top: .35rem; }
+main { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+          padding: 1.25rem 1.4rem 1.4rem; margin-bottom: 1.1rem; }
+h2 { margin: 0 0 .2rem; font-size: .95rem; font-weight: 620; letter-spacing: -.01em; }
+.note { color: var(--muted); font-size: .82rem; margin: 0 0 1rem; }
+.empty { color: var(--muted); font-style: italic; padding: .5rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+th { text-align: left; font-weight: 560; color: var(--muted); font-size: .76rem;
+     text-transform: uppercase; letter-spacing: .04em; padding: 0 .5rem .5rem; }
+td { padding: .5rem; border-top: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.concept { cursor: pointer; }
+tr.concept:hover td { background: var(--accent-soft); }
+.pin { color: var(--accent); font-weight: 700; }
+.bar { height: 7px; border-radius: 4px; background: var(--grid); overflow: hidden; min-width: 60px; }
+.bar > i { display: block; height: 100%; background: var(--accent); }
+.detail td { background: var(--bg); font-size: .84rem; padding: 0; }
+.incident { display: grid; grid-template-columns: 6.5rem 1fr; gap: .1rem .8rem;
+            padding: .6rem .9rem; border-top: 1px dashed var(--line); }
+.incident:first-child { border-top: none; }
+.incident .when { color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.incident .lbl { color: var(--muted); }
+/* Block, not <br>: keeps a line break in the copied text, so pasting an incident
+   into a note preserves which statement was yours and which was reality. */
+.incident .said { display: block; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .8rem; }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: .75rem .85rem; }
+.card b { display: block; font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.card span { color: var(--muted); font-size: .78rem; }
+.card.flag { border-color: var(--warn); }
+.card.flag b { color: var(--warn); }
+.card em { display: block; color: var(--warn); font-size: .76rem; font-style: normal; margin-top: .3rem; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+.axis { fill: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+#focusbar {
+  position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel);
+  border-top: 1px solid var(--line); padding: .8rem 1.5rem; display: none;
+}
+#focusbar.on { display: block; }
+#focusbar .inner { max-width: 62rem; margin: 0 auto; display: flex; gap: .8rem; align-items: center; }
+code { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+       background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+       padding: .45rem .6rem; flex: 1; overflow-x: auto; white-space: nowrap; }
+button { font: inherit; font-size: .85rem; padding: .45rem .9rem; border-radius: 6px;
+         border: 1px solid var(--accent); background: var(--accent); color: var(--panel);
+         cursor: pointer; white-space: nowrap; }
+button:hover { opacity: .9; }
+.legend { display: flex; gap: .9rem; flex-wrap: wrap; font-size: .78rem; color: var(--muted); margin-top: .6rem; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: .3rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>spar</h1>
+  <div class="sub">generated {{GENERATED}} · everything here is local to this machine</div>
+</header>
+<main>
+  <section>
+    <h2>Calibration</h2>
+    <p class="note">Share of your predictions that produced no misconception, by week.
+       Not a gap count — that only ever climbs, and would read as decline exactly while you improve.</p>
+    <div id="calibration"></div>
+  </section>
+
+  <section>
+    <h2>Levels over time</h2>
+    <p class="note">How much of the work you did yourself. This is the real progress signal:
+       as concepts close, the levels should fall on their own.</p>
+    <div id="levels"></div>
+  </section>
+
+  <section>
+    <h2>Curriculum</h2>
+    <p class="note">Concepts by weakness. Nobody chose this order — click a row for the incidents behind it,
+       tick one to focus it.</p>
+    <div id="curriculum"></div>
+  </section>
+
+  <section>
+    <h2>Tool health</h2>
+    <p class="note">Whether the design is still right — <em>not</em> whether you are disciplined.
+       A number out of range means change the tool, not yourself.</p>
+    <div id="health" class="cards"></div>
+  </section>
+</main>
+
+<div id="focusbar"><div class="inner">
+  <code id="focuscmd"></code>
+  <button id="copy">Copy</button>
+</div></div>
+
+<script>
+const STATS = {{STATS}};
+const $ = (id) => document.getElementById(id);
+const pct = (v) => Math.round(v * 100) + '%';
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LEVEL_NAMES = ['rush', 'standard', 'skeleton', 'transcript'];
+
+/* ---------- calibration ---------- */
+(function () {
+  const weeks = STATS.calibration;
+  if (!weeks.length) { $('calibration').innerHTML = '<p class="empty">No predictions recorded yet.</p>'; return; }
+
+  const W = 720, H = 180, PAD = { l: 34, r: 12, t: 12, b: 26 };
+  const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
+  const x = (i) => PAD.l + (weeks.length === 1 ? iw / 2 : (i / (weeks.length - 1)) * iw);
+  const y = (v) => PAD.t + ih - v * ih;
+
+  const grid = [0, .25, .5, .75, 1].map((v) =>
+    `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/>` +
+    `<text class="axis" x="${PAD.l - 6}" y="${y(v) + 3}" text-anchor="end">${pct(v)}</text>`).join('');
+
+  const pts = weeks.map((w, i) => [x(i), y(w.rate)]);
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0] + ' ' + p[1]).join(' ');
+  const area = `${line} L ${pts[pts.length-1][0]} ${y(0)} L ${pts[0][0]} ${y(0)} Z`;
+
+  const dots = weeks.map((w, i) =>
+    `<circle cx="${x(i)}" cy="${y(w.rate)}" r="3.5" fill="var(--accent)"><title>${esc(w.week)}: ${w.clean}/${w.predictions} clean</title></circle>` +
+    `<text class="axis" x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(w.week.slice(5))}</text>`).join('');
+
+  $('calibration').innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Calibration by week">
+       ${grid}
+       <path d="${area}" fill="var(--accent-soft)"/>
+       <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
+       ${dots}
+     </svg>` +
+    (weeks.length < 3 ? '<p class="note" style="margin-top:.8rem">Fewer than three weeks — this line does not mean anything yet.</p>' : '');
+})();
+
+/* ---------- levels ---------- */
+(function () {
+  const weeks = STATS.calibration;
+  if (!weeks.length) { $('levels').innerHTML = '<p class="empty">Nothing yet.</p>'; return; }
+
+  const W = 720, H = 140, PAD = { l: 34, r: 12, t: 10, b: 26 };
+  const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
+  const bw = Math.min(46, (iw / weeks.length) * 0.62);
+
+  const bars = weeks.map((w, i) => {
+    const cx = PAD.l + (iw / weeks.length) * (i + 0.5);
+    let acc = 0;
+    const stack = [3, 2, 1, 0].map((lvl) => {
+      const n = w.levelCounts[lvl] || 0;
+      if (!n) return '';
+      const h = (n / w.predictions) * ih;
+      const yTop = PAD.t + ih - acc - h;
+      acc += h;
+      return `<rect x="${cx - bw / 2}" y="${yTop}" width="${bw}" height="${h}" fill="var(--l${lvl})">
+                <title>${esc(w.week)}: ${n}x level ${lvl} (${LEVEL_NAMES[lvl]})</title></rect>`;
+    }).join('');
+    return stack + `<text class="axis" x="${cx}" y="${H - 8}" text-anchor="middle">${esc(w.week.slice(5))}</text>`;
+  }).join('');
+
+  const legend = [0, 1, 2, 3].map((l) =>
+    `<span><i style="background:var(--l${l})"></i>${l} ${LEVEL_NAMES[l]}</span>`).join('');
+
+  $('levels').innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Levels by week">${bars}</svg>
+     <div class="legend">${legend}</div>`;
+})();
+
+/* ---------- curriculum ---------- */
+(function () {
+  const rows = STATS.concepts;
+  if (!rows.length) { $('curriculum').innerHTML = '<p class="empty">No gaps logged yet.</p>'; return; }
+
+  const maxOpen = Math.max(...rows.map((r) => r.open), 1);
+  const body = rows.map((r, i) => {
+    const incidents = r.incidents.map((inc) => `
+      <div class="incident">
+        <span class="when">${esc(inc.ts.slice(0, 10))}</span>
+        <span>
+          <span class="said"><span class="lbl">thought </span>${esc(inc.yourModel)}</span>
+          <span class="said"><span class="lbl">actually </span>${esc(inc.reality)}</span>
+        </span>
+      </div>`).join('');
+    return `
+      <tr class="concept" data-row="${i}">
+        <td><input type="checkbox" data-concept="${esc(r.concept)}" ${r.focused ? 'checked' : ''}></td>
+        <td>${r.focused ? '<span class="pin">★ </span>' : ''}${esc(r.concept)}</td>
+        <td><div class="bar"><i style="width:${(r.open / maxOpen) * 100}%"></i></div></td>
+        <td class="num">${r.open} / ${r.total}</td>
+        <td class="num">${r.meanBox.toFixed(1)}</td>
+        <td class="num">${esc(r.lastSeen.slice(0, 10))}</td>
+      </tr>
+      <tr class="detail" id="d${i}" hidden><td colspan="6">${incidents}</td></tr>`;
+  }).join('');
+
+  $('curriculum').innerHTML = `
+    <table>
+      <thead><tr>
+        <th style="width:2rem"></th><th>Concept</th><th style="width:8rem">Open</th>
+        <th class="num">Open / all</th><th class="num">Box</th><th class="num">Last</th>
+      </tr></thead>
+      <tbody>${body}</tbody>
+    </table>`;
+
+  $('curriculum').addEventListener('click', (e) => {
+    if (e.target.matches('input[type=checkbox]')) return refreshFocus();
+    const tr = e.target.closest('tr.concept');
+    if (!tr) return;
+    const detail = $('d' + tr.dataset.row);
+    detail.hidden = !detail.hidden;
+  });
+  refreshFocus();
+})();
+
+/* ---------- focus ---------- */
+function refreshFocus() {
+  const picked = [...document.querySelectorAll('#curriculum input:checked')].map((c) => c.dataset.concept);
+  const bar = $('focusbar');
+  if (!picked.length) { bar.classList.remove('on'); return; }
+  bar.classList.add('on');
+  $('focuscmd').textContent = 'spar focus ' + picked.map((c) => JSON.stringify(c)).join(' ');
+}
+$('copy').addEventListener('click', () => {
+  const text = $('focuscmd').textContent;
+  const done = () => { $('copy').textContent = 'Copied'; setTimeout(() => ($('copy').textContent = 'Copy'), 1400); };
+  // A file:// page may have no clipboard API; select the text so it can still be copied by hand.
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, selectCmd);
+  else selectCmd();
+});
+function selectCmd() {
+  const range = document.createRange();
+  range.selectNodeContents($('focuscmd'));
+  const sel = getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+/* ---------- health ---------- */
+(function () {
+  const h = STATS.health, n = STATS.noIdea, t = STATS.totals, d = STATS.due;
+  const cards = [
+    { v: pct(h.rushRatio), l: 'rush', flag: h.rushRatio > 0.5, why: 'Over half. The friction is set too high — lower it.' },
+    { v: pct(h.overrideRatio), l: 'overrides', flag: h.overrideRatio > 0.4, why: 'The thresholds disagree with you. Change them.' },
+    { v: pct(h.trivialRatio), l: 'waved through', flag: h.trivialRatio > 0.7, why: 'Almost everything. Check the triviality criteria.' },
+    { v: pct(n.ratio), l: '"no idea"', flag: n.ratio > 0.6, why: 'The material is above you. Learn the concept before gating on it.' },
+    { v: d.total, l: 'due now', flag: false },
+    { v: t.predictions, l: 'predictions', flag: false },
+  ];
+  $('health').innerHTML = cards.map((c) =>
+    `<div class="card${c.flag ? ' flag' : ''}"><b>${esc(c.v)}</b><span>${esc(c.l)}</span>${c.flag ? `<em>${esc(c.why)}</em>` : ''}</div>`).join('');
+})();
+</script>
+</body>
+</html>

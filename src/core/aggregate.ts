@@ -9,6 +9,19 @@ export interface WeekPoint {
   /** Fraction of predictions that produced no misconception at all. */
   rate: number
   meanLevel: number
+  /** Predictions per level that week. The real progress signal: levels should fall. */
+  levelCounts: Record<Level, number>
+}
+
+/** One recorded divergence, trimmed to what a reader actually needs. */
+export interface Incident {
+  id: string
+  ts: string
+  yourModel: string
+  reality: string
+  box: number
+  due: string
+  kind: string
 }
 
 export interface ConceptRow {
@@ -18,6 +31,8 @@ export interface ConceptRow {
   meanBox: number
   lastSeen: string
   focused: boolean
+  /** Newest first. This is what you actually open before a standup. */
+  incidents: Incident[]
 }
 
 export interface Stats {
@@ -51,10 +66,10 @@ export function aggregate(
   // Counting gaps alone would only ever go up, and would read as decline while you improve.
   const dirtySessions = new Set(misconceptions.map((g) => sessionKey(g)))
 
-  const byWeek = new Map<string, { predictions: number; clean: number; levels: number[] }>()
+  const byWeek = new Map<string, { predictions: number; clean: number; levels: Level[] }>()
   for (const p of predictions) {
     const week = weekOf(p.ts)
-    const bucket = byWeek.get(week) ?? { predictions: 0, clean: 0, levels: [] }
+    const bucket = byWeek.get(week) ?? { predictions: 0, clean: 0, levels: [] as Level[] }
     bucket.predictions++
     if (!dirtySessions.has(`${p.session}`)) bucket.clean++
     bucket.levels.push(p.level)
@@ -68,7 +83,8 @@ export function aggregate(
       predictions: b.predictions,
       clean: b.clean,
       rate: b.predictions ? b.clean / b.predictions : 0,
-      meanLevel: b.levels.length ? b.levels.reduce((x, y) => x + y, 0) / b.levels.length : 0,
+      meanLevel: b.levels.length ? b.levels.reduce<number>((x, y) => x + y, 0) / b.levels.length : 0,
+      levelCounts: countLevels(b.levels),
     }))
 
   const answers = predictions.length * 3
@@ -89,6 +105,18 @@ export function aggregate(
       meanBox: rows.reduce((acc, g) => acc + g.box, 0) / rows.length,
       lastSeen: rows.map((g) => g.ts).sort().at(-1)!,
       focused: focusSet.has(concept.toLowerCase()),
+      incidents: rows
+        .slice()
+        .sort((a, b) => (a.ts < b.ts ? 1 : -1))
+        .map((g) => ({
+          id: g.id,
+          ts: g.ts,
+          yourModel: g.your_model,
+          reality: g.reality,
+          box: g.box,
+          due: g.due,
+          kind: g.kind,
+        })),
     }))
     // Weakest first: that ordering is the curriculum, so it must not be alphabetical.
     .sort((a, b) => {
@@ -132,6 +160,12 @@ export function aggregate(
       trivialRatio: gatedTasks ? trivials / gatedTasks : 0,
     },
   }
+}
+
+function countLevels(levels: Level[]): Record<Level, number> {
+  const counts: Record<Level, number> = { 0: 0, 1: 0, 2: 0, 3: 0 }
+  for (const level of levels) counts[level]++
+  return counts
 }
 
 function sessionKey(gap: Gap): string {

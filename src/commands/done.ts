@@ -88,7 +88,7 @@ export function cmdDone(sessionId: string): number {
       '',
       'Log the first two kinds:',
       `  spar log --session ${sessionId} --concept "<concept>" \\`,
-      '    --model "<what they thought>" --reality "<what is true>" --kind <misconception|typo-bug>',
+      '    --model "<the belief, no framing words>" --reality "<what is true>" --kind <misconception|typo-bug>',
     ].join('\n'),
   )
   return 0
