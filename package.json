@@ -19,8 +19,13 @@
     "dist",
     "skills",
     "templates",
+    "hooks",
+    "com.anthropic.claude-code",
+    "com.cursor",
+    ".claude-plugin",
     "plugin.json",
-    "mcp.json"
+    "mcp.json",
+    ".mcp.json"
   ],
   "engines": {
     "node": ">=20"
@@ -29,7 +34,9 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "emit": "node dist/cli.js emit --root .",
+    "prepublishOnly": "npm run build && npm test"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
@@ -39,5 +46,14 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "zod": "^4.4.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/landerparren/spar.git"
+  },
+  "homepage": "https://github.com/landerparren/spar#readme",
+  "bugs": {
+    "url": "https://github.com/landerparren/spar/issues"
+  },
+  "author": "Lander Parren"
 }

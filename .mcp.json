@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "spar": {
+      "type": "stdio",
+      "command": "spar",
+      "args": ["mcp"]
+    }
+  }
+}

@@ -16,6 +16,7 @@ import { cmdStats } from './commands/stats.js'
 import { cmdDashboard } from './commands/dashboard.js'
 import { cmdFocus } from './commands/focus.js'
 import { cmdInstall } from './commands/install.js'
+import { cmdEmit } from './commands/emit.js'
 import { cmdSetup } from './commands/setup.js'
 import type { GapKind, Level } from './core/types.js'
 
@@ -54,6 +55,8 @@ async function main(): Promise<number> {
       const name = argv[1] ?? ''
       return runHook(name, flags.string('agent') ?? 'claude-code')
     }
+    case 'emit':
+      return cmdEmit(flags.string('root') ?? process.cwd())
     case 'install':
       return cmdInstall({ agent: flags.string('agent'), dryRun: flags.bool('dry-run') })
     case 'mcp': {
