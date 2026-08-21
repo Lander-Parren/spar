@@ -2,6 +2,7 @@ import { readGaps, readState, resetTask, writeState } from '../core/store.js'
 import { NO_IDEA, suggestLevel } from '../core/level.js'
 import { LEVEL_NAMES, type Level } from '../core/types.js'
 import { readFocus } from '../core/focus.js'
+import { clearProposals } from '../core/proposals.js'
 
 /** `spar suggest-level` — ask the gap log how hard this task should be. */
 export function cmdSuggestLevel(sessionId: string, concepts: string[]): number {
@@ -79,6 +80,7 @@ function normalizeAnswer(answer: string | undefined): string {
 
 /** `spar next` — say out loud that this is new work, without waiting for the idle timer. */
 export function cmdNext(sessionId: string): number {
+  clearProposals(sessionId)
   writeState(resetTask(readState(sessionId)))
   console.log('new task — the gate will ask again on the next write')
   return 0

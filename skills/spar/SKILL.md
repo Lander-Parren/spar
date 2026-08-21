@@ -60,12 +60,28 @@ Record with `spar predict --session <id> --q1 "..." --q2 "..." --q3 "..."`.
 | 0 rush | Implement normally. Afterwards, ask one 30-second question about a real decision point you hit. |
 | 1 standard | Implement normally, then do step 5. |
 | 2 skeleton | Write signatures, imports, and wiring. Leave every line that carries the decision as `TODO(spar: <precise instruction>)`. The user writes those 5–10 lines. Then stop and wait. |
-| 3 transcript | **Write nothing.** Deliver the whole implementation in chat with enough explanation to place it: which file, where in it, why there. Then stop and wait. |
+| 3 transcript | **Write nothing.** Deliver the whole implementation in chat with enough explanation to place it: which file, where in it, why there. Record it, then stop and wait. |
 
-At levels 2 and 3, when the user says they are done, run `spar done --session <id>` and
-compare what they actually wrote against what you proposed.
+At level 2 the skeleton is recorded for you when you write it. A post-write check
+verifies you actually left a marker somewhere in the task — if it complains, you left
+the user nothing to decide, so go back and hand over the decision, not the typing.
 
-**5. Show the difference.** Not a verdict — a comparison:
+At level 3, record what you offered *before* the user starts writing:
+
+```
+spar propose --session <id> --file <path> < proposal.txt
+```
+
+Do this even though you can remember it. This task will take twenty minutes and your
+context may be compacted in between; a review that compares their code against a hazy
+recollection is exactly the soft, agreeable kind that makes the whole exercise
+worthless.
+
+When the user says they are done, run `spar done --session <id>`. It prints the actual
+diff between what was proposed and what is on disk.
+
+**5. Show the difference.** Not a verdict — a comparison. At levels 2 and 3 work from
+the diff `spar done` prints; at level 1 compare against the prediction directly:
 
 - Where their prediction held. Say so explicitly; calibration runs both ways.
 - Where it diverged, **and why**. Give the reason the code has to be this way, not a

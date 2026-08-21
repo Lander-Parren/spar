@@ -1,5 +1,6 @@
 import { loadConfig, trackedProject } from '../core/config.js'
 import { readState, resetTask, writeState } from '../core/store.js'
+import { clearProposals } from '../core/proposals.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 import type { SessionState } from '../core/types.js'
 
@@ -22,6 +23,7 @@ export function boundary(event: NormalizedEvent): NormalizedDecision {
     const prompt = event.prompt ?? ''
 
     if (isNewTask(state, config.idleMinutes * 60_000)) {
+      clearProposals(event.sessionId)
       writeState({ ...resetTask(state), taskPrompt: prompt })
     }
     return { type: 'noop' }

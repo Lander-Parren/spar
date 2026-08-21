@@ -7,6 +7,12 @@
         "hooks": [{ "type": "command", "command": "spar hook gate --agent claude-code", "timeout": 5 }]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [{ "type": "command", "command": "spar hook skeleton --agent claude-code", "timeout": 5 }]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "matcher": "*",

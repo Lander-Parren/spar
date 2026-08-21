@@ -1,12 +1,18 @@
+import { readFileSync } from 'node:fs'
+import { dirname, isAbsolute, relative } from 'node:path'
 import { readState } from '../core/store.js'
-import { LEVEL_NAMES } from '../core/types.js'
+import { loadConfig, trackedProject } from '../core/config.js'
+import { readProposals } from '../core/proposals.js'
+import { diffLines, hasChanges, renderDiff } from '../core/diff.js'
+import { LEVEL_NAMES, type Config } from '../core/types.js'
+import { MARKER } from '../hooks/skeleton.js'
 
 /**
  * `spar done` — the closing review, at levels 2 and 3.
  *
- * This is the step Cursor never gave you: copying code out of a chat teaches you
- * something only if someone checks afterwards whether you understood it or merely
- * typed it. Slice 1 prints the protocol; slice 2 wires the automatic diff.
+ * This is the step the Cursor workflow never had. Copying an implementation out of a
+ * chat teaches you something only if somebody checks afterwards whether you
+ * understood it or merely typed it. The diff is the check.
  */
 export function cmdDone(sessionId: string): number {
   const state = readState(sessionId)
@@ -17,23 +23,99 @@ export function cmdDone(sessionId: string): number {
     return 0
   }
 
+  const proposals = readProposals(sessionId)
+  if (proposals.length === 0) {
+    console.log(
+      [
+        `spar: level ${level} (${LEVEL_NAMES[level]}), but nothing was recorded to compare against.`,
+        level === 3
+          ? 'At level 3, record what you offered before the user writes it:\n' +
+            `  spar propose --session ${sessionId} --file <path> < proposal.txt`
+          : 'At level 2 the skeleton is recorded automatically when you write it.',
+      ].join('\n'),
+    )
+    return 0
+  }
+
+  const config = loadConfig()
+  console.log(`spar: closing review for level ${level} (${LEVEL_NAMES[level]}).\n`)
+
+  let anyDiff = false
+  for (const proposal of proposals) {
+    const current = read(proposal.file)
+    const name = displayPath(proposal.file, config)
+
+    if (current === undefined) {
+      console.log(`## ${name}\n  not on disk — the user has not written this one yet.\n`)
+      continue
+    }
+
+    const lines = diffLines(proposal.content, current)
+    const leftover = current.includes(MARKER)
+
+    if (!hasChanges(lines)) {
+      console.log(
+        `## ${name}\n  identical to what was proposed.` +
+          (level === 3
+            ? '\n  Worth asking why they placed it where they did — a clean copy tells you nothing yet.\n'
+            : '\n'),
+      )
+      continue
+    }
+
+    anyDiff = true
+    console.log(`## ${name}   (- proposed, + written)`)
+    console.log(renderDiff(lines))
+    if (leftover) console.log(`\n  NOTE: ${MARKER} markers are still in this file — unfinished, not a gap.`)
+    console.log()
+  }
+
   console.log(
     [
-      `spar: closing review for level ${level} (${LEVEL_NAMES[level]}).`,
+      '---',
       '',
-      'Read what the user actually wrote and compare it against what you proposed.',
-      'Sort every difference into exactly one of three kinds, and say which:',
+      anyDiff
+        ? 'Sort every difference above into exactly one kind, and say which:'
+        : 'No textual differences. Do not stop here — go to the questions below.',
       '',
-      '  misconception  they misunderstood something -> log it',
-      '  typo-bug       they mistyped or mis-wired it -> log it too, it is still a gap',
-      '  improvement    theirs is better than yours   -> say so plainly, do not log it as a gap',
+      '  misconception  they misunderstood something      -> log it',
+      '  typo-bug       they mistyped or mis-wired it     -> log it too, still a gap',
+      '  improvement    theirs is better than yours       -> say so plainly, do NOT log as a gap',
       '',
-      'Then ask them WHY they placed it where they did. That question is the actual test;',
-      'it survives copy-paste, so you never need to police how the code got there.',
+      'Then ask them WHY they placed it where they did, and what they expect to break.',
+      'That question is the real test: it survives copy-paste, so you never have to police',
+      'how the code got there.',
       '',
-      'Log each of the first two kinds:',
-      `  spar log --session ${sessionId} --concept "<concept>" --model "<what they thought>" --reality "<what is true>" --kind <misconception|typo-bug>`,
+      'Log the first two kinds:',
+      `  spar log --session ${sessionId} --concept "<concept>" \\`,
+      '    --model "<what they thought>" --reality "<what is true>" --kind <misconception|typo-bug>',
     ].join('\n'),
   )
   return 0
+}
+
+/**
+ * Show a path relative to the project it belongs to, not to the working directory.
+ *
+ * The project root is the frame the user actually thinks in ("src/Api/Orders.cs"),
+ * and it stays stable wherever `spar done` happens to be run from. Falls back to
+ * the working directory, then to the absolute path — which also covers macOS, where
+ * /var is a symlink to /private/var and a naive relative() degenerates into `../..`.
+ */
+function displayPath(file: string, config: Config): string {
+  const project = trackedProject(dirname(file), config)
+  for (const base of [project?.path, process.cwd()]) {
+    if (!base) continue
+    const rel = relative(base, file)
+    if (rel && !rel.startsWith('..') && !isAbsolute(rel)) return rel
+  }
+  return file
+}
+
+function read(path: string): string | undefined {
+  try {
+    return readFileSync(path, 'utf8')
+  } catch {
+    return undefined
+  }
 }

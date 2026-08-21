@@ -10,6 +10,7 @@ import {
 } from './commands/session.js'
 import { cmdLog } from './commands/log.js'
 import { cmdDone } from './commands/done.js'
+import { cmdPropose } from './commands/propose.js'
 import { cmdSetup } from './commands/setup.js'
 import type { GapKind, Level } from './core/types.js'
 
@@ -23,6 +24,7 @@ const HELP = `spar — keep learning while AI writes the code
   spar rush --session <id> [--off]
   spar done --session <id>
   spar next --session <id>
+  spar propose --session <id> --file <path> [--text <content>]   (or pipe on stdin)
   spar log --session <id> --concept <c> --model <what you thought> --reality <what was true>
            [--kind misconception|typo-bug|improvement] [--question 1|2|3]
 
@@ -57,6 +59,8 @@ async function main(): Promise<number> {
         q2: flags.string('q2'),
         q3: flags.string('q3'),
       })
+    case 'propose':
+      return cmdPropose(requireSession(flags), required(flags.string('file'), '--file'), flags.string('text'))
     case 'done':
       return cmdDone(requireSession(flags))
     case 'next':

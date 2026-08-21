@@ -11,7 +11,8 @@ Those gaps become your curriculum. The concept you're wrong about most often ris
 the top on its own — and the friction moves there with it, so you never have to decide
 to work hard.
 
-> Status: early. Slice 1 of 6 — the gate, the questions, and the gap log.
+> Status: early. Slice 2 of 6 — the gate, all four levels, and the closing review.
+> Spaced repetition (so logged gaps actually come back) lands in slice 3.
 
 ## Install
 
