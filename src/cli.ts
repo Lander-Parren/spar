@@ -8,6 +8,7 @@ import {
   cmdSuggestLevel,
 } from './commands/session.js'
 import { cmdLog } from './commands/log.js'
+import { cmdDone } from './commands/done.js'
 import { cmdSetup } from './commands/setup.js'
 import type { GapKind, Level } from './core/types.js'
 
@@ -19,6 +20,7 @@ const HELP = `spar — keep learning while AI writes the code
   spar predict --session <id> [--q1 <a>] [--q2 <a>] [--q3 <a>]
   spar mark --session <id> --trivial
   spar rush --session <id> [--off]
+  spar done --session <id>
   spar log --session <id> --concept <c> --model <what you thought> --reality <what was true>
            [--kind misconception|typo-bug|improvement] [--question 1|2|3]
 
@@ -53,6 +55,8 @@ async function main(): Promise<number> {
         q2: flags.string('q2'),
         q3: flags.string('q3'),
       })
+    case 'done':
+      return cmdDone(requireSession(flags))
     case 'mark':
       return cmdMarkTrivial(requireSession(flags))
     case 'rush':
