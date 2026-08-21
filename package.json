@@ -49,11 +49,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/landerparren/spar.git"
+    "url": "git+https://github.com/Lander-Parren/spar.git"
   },
-  "homepage": "https://github.com/landerparren/spar#readme",
+  "homepage": "https://github.com/Lander-Parren/spar#readme",
   "bugs": {
-    "url": "https://github.com/landerparren/spar/issues"
+    "url": "https://github.com/Lander-Parren/spar/issues"
   },
   "author": "Lander Parren"
 }

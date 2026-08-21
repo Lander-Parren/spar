@@ -120,6 +120,10 @@ misconception. Not a gap count — that only ever climbs, and would read as decl
 while you improve. Below it the concept table, ordered by weakness. That order is your
 curriculum, and nobody chose it.
 
+![The spar dashboard](docs/dashboard.png)
+
+*Six weeks of a fictional .NET onboarding. The page follows your system theme.*
+
 The dashboard is one file with no network access of any kind — no CDN, no fonts, no chart
 library, hand-written SVG. Every number is static markup, so it reads the same with
 scripting disabled, behind a strict CSP, or in an attachment preview; script only adds
