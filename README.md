@@ -67,7 +67,9 @@ as decline exactly while you improve. Below it sits the concept table, ordered b
 weakness. That order is your curriculum, and nobody chose it.
 
 The dashboard is one file with no network access of any kind — no CDN, no fonts, no
-chart library, hand-written SVG. It opens offline, from a double-click, in five years.
+chart library, hand-written SVG. Every number is static markup, so it reads the same
+with scripting disabled, behind a strict CSP, or in an attachment preview; script only
+adds multi-select to the focus bar. It opens offline, from a double-click, in five years.
 Tick a concept to focus it and it hands you a `spar focus "..."` line to paste back;
 focused concepts get their level raised by one and their gaps come back first, and the
 focus expires after two weeks so that a priority list stays a priority list.

@@ -9,26 +9,33 @@ const NOW = new Date('2026-08-21T12:00:00Z')
 function gap(patch: Partial<Gap> = {}): Gap {
   return {
     id: 'g-1', ts: '2026-08-18T00:00:00Z', project: 'api', task: 't', agent: 'cli',
-    session: 's1', level: 1, kind: 'misconception', your_model: 'a', reality: 'b',
-    concept: 'orm', box: 1, due: '2026-08-21', hits: 0, misses: 0, ...patch,
+    session: 's1', level: 1, kind: 'misconception',
+    your_model: 'the repository decides the transaction boundary',
+    reality: 'the unit-of-work does', concept: 'transaction boundaries in an ORM',
+    box: 1, due: '2026-08-21', hits: 0, misses: 0, ...patch,
   }
 }
 
-const predict: SparEvent = { ts: '2026-08-18T09:00:00Z', type: 'predict', session: 's1', level: 1, blanks: 0, concepts: [] }
+const predict = (session: string, ts: string): SparEvent =>
+  ({ ts, type: 'predict', session, level: 1, blanks: 0, concepts: [] })
 
-const render = (gaps: Gap[], events: SparEvent[] = [predict]) =>
-  renderHtml(aggregate(gaps, events, [], NOW), NOW)
+const EVENTS = [predict('s1', '2026-08-18T09:00:00Z'), predict('s2', '2026-08-18T10:00:00Z')]
+const render = (gaps: Gap[], focused: string[] = []) =>
+  renderHtml(aggregate(gaps, EVENTS, focused, NOW), NOW)
+
+/** Everything readable must survive with scripting removed entirely. */
+function withoutScripts(html: string): string {
+  return html.replace(/<script[\s\S]*?<\/script>/g, '')
+}
 
 describe('renderHtml', () => {
-  it('produces a complete document with the data embedded', () => {
+  it('produces a complete document with nothing left unfilled', () => {
     const html = render([gap()])
     expect(html.startsWith('<!doctype html>')).toBe(true)
-    expect(html).not.toContain('{{STATS}}')
-    expect(html).not.toContain('{{GENERATED}}')
-    expect(html).toContain('orm')
+    expect(html).not.toMatch(/\{\{[A-Z]+\}\}/)
   })
 
-  it('reaches the network nowhere — no cdn, no font, no fetch', () => {
+  it('reaches the network nowhere', () => {
     const html = render([gap()])
     expect(html).not.toMatch(/https?:\/\//)
     expect(html).not.toMatch(/\bsrc\s*=/)
@@ -36,30 +43,64 @@ describe('renderHtml', () => {
     expect(html).not.toMatch(/<link\b/)
   })
 
-  it('cannot be broken out of by a concept name containing a script tag', () => {
-    const html = render([gap({ concept: '</script><img onerror=alert(1)>' })])
-    const body = html.slice(html.indexOf('const STATS'))
-    // The literal closing tag must not survive into the script block.
-    expect(body.slice(0, body.indexOf('\n'))).not.toContain('</script>')
-    expect(html).toContain('\\u003c/script\\u003e')
-    // Exactly one script element, so nothing was injected alongside it.
+  describe('with every script removed', () => {
+    const bare = withoutScripts(render([gap(), gap({ id: 'g-2', concept: 'service lifetimes', box: 4 })]))
+
+    it('still shows the calibration figures', () => {
+      expect(bare).toContain('2026-08-17')  // the week bucket
+      expect(bare).toContain('50%')          // 1 of 2 predictions clean
+      expect(bare).toContain('1/2')
+    })
+
+    it('still draws both charts as markup', () => {
+      expect(bare.match(/<svg/g)?.length).toBe(2)
+      expect(bare).toContain('<path')
+      expect(bare).toContain('<rect')
+    })
+
+    it('still lists every concept, with its counts', () => {
+      expect(bare).toContain('transaction boundaries in an ORM')
+      expect(bare).toContain('service lifetimes')
+      expect(bare).toContain('box 1.0')
+    })
+
+    it('still contains the incidents behind each concept', () => {
+      expect(bare).toContain('the repository decides the transaction boundary')
+      expect(bare).toContain('the unit-of-work does')
+    })
+
+    it('still offers a way to focus a concept', () => {
+      expect(bare).toContain('spar focus &quot;transaction boundaries in an ORM&quot;')
+    })
+
+    it('still shows the tool-health numbers', () => {
+      expect(bare).toContain('predictions')
+      expect(bare).toContain('due now')
+    })
+
+    it('expands without script, via details/summary', () => {
+      expect(bare).toContain('<details class="concept"')
+      expect(bare).toContain('<summary>')
+    })
+  })
+
+  it('escapes a concept that contains markup instead of rendering it', () => {
+    const html = render([gap({ concept: '</summary><img onerror=alert(1)>' })])
+    expect(html).not.toContain('<img onerror')
+    expect(html).toContain('&lt;img onerror')
     expect(html.match(/<script/g)).toHaveLength(1)
   })
 
-  it('renders an empty history without throwing or showing NaN', () => {
+  it('renders an empty history without NaN or a broken layout', () => {
     const html = renderHtml(aggregate([], [], [], NOW), NOW)
     expect(html).not.toContain('NaN')
     expect(html).toContain('No predictions recorded yet')
+    expect(html).toContain('No gaps logged yet')
   })
 
-  it('carries incidents through so the detail view has something to show', () => {
-    const html = render([gap({ your_model: 'repository opens it', reality: 'unit-of-work does' })])
-    expect(html).toContain('repository opens it')
-    expect(html).toContain('unit-of-work does')
-  })
-
-  it('marks a focused concept in the embedded data', () => {
-    const html = renderHtml(aggregate([gap()], [predict], ['orm'], NOW), NOW)
-    expect(html).toContain('"focused":true')
+  it('marks and opens a focused concept', () => {
+    const html = render([gap()], ['transaction boundaries in an ORM'])
+    expect(html).toContain('<details class="concept" open>')
+    expect(html).toContain('★')
   })
 })
