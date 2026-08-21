@@ -3,6 +3,7 @@ import type { Adapter, EventKind, NormalizedDecision } from '../adapters/types.j
 import { gate } from '../hooks/gate.js'
 import { boundary } from '../hooks/boundary.js'
 import { skeleton } from '../hooks/skeleton.js'
+import { due } from '../hooks/due.js'
 
 const ADAPTERS: Record<string, Adapter> = {
   'claude-code': claudeCode,
@@ -12,6 +13,7 @@ const HOOKS: Record<string, { kind: EventKind; run: (e: never) => NormalizedDeci
   gate: { kind: 'pre-tool', run: gate as never },
   boundary: { kind: 'prompt', run: boundary as never },
   skeleton: { kind: 'post-tool', run: skeleton as never },
+  due: { kind: 'session-start', run: due as never },
 }
 
 /**

@@ -11,8 +11,9 @@ Those gaps become your curriculum. The concept you're wrong about most often ris
 the top on its own — and the friction moves there with it, so you never have to decide
 to work hard.
 
-> Status: early. Slice 2 of 6 — the gate, all four levels, and the closing review.
-> Spaced repetition (so logged gaps actually come back) lands in slice 3.
+> Status: slice 3 of 6 — the loop is closed. Gate, four levels, closing review,
+> spaced repetition, and `spar stats`. The dashboard and the second agent adapter
+> are still to come.
 
 ## Install
 
@@ -47,6 +48,22 @@ completely inert.
 
 There is no off switch, only level 0. The level is suggested from your own gap log,
 with the reason attached — you can always override it.
+
+## Gaps come back
+
+A logged gap returns at session start, once, as a question at a natural moment —
+never a queue and never an interruption. Answer it well and it moves up a box
+(1, 3, 7, 16, 35 days); answer it badly and it starts over tomorrow. There is no
+separate app and no inbox: it arrives in the session you were already in.
+
+```sh
+spar stats
+```
+
+The headline is **calibration**: the share of your predictions that produced no
+misconception, week by week. Not a gap count — that only ever goes up, and would read
+as decline exactly while you improve. Below it sits the concept table, ordered by
+weakness. That order is your curriculum, and nobody chose it.
 
 ## When does the gate fire?
 

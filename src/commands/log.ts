@@ -32,6 +32,7 @@ export function cmdLog(args: LogArgs): number {
     project: project ? basename(project.path) : basename(cwd),
     task: state.task ?? state.taskPrompt ?? '',
     agent: 'cli',
+    session: args.sessionId,
     level: (state.level ?? 1) as Level,
     kind: args.kind ?? 'misconception',
     ...(args.question ? { question: args.question } : {}),

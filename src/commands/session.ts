@@ -3,6 +3,7 @@ import { NO_IDEA, suggestLevel } from '../core/level.js'
 import { LEVEL_NAMES, type Level } from '../core/types.js'
 import { readFocus } from '../core/focus.js'
 import { clearProposals } from '../core/proposals.js'
+import { appendEvent } from '../core/events.js'
 
 /** `spar suggest-level` — ask the gap log how hard this task should be. */
 export function cmdSuggestLevel(sessionId: string, concepts: string[]): number {
@@ -18,12 +19,16 @@ export function cmdSuggestLevel(sessionId: string, concepts: string[]): number {
   )
   // Recorded, not committed: the user still gets to override before predicting.
   writeState({ ...state, level: suggestion.level })
+  appendEvent({ type: 'suggest', session: sessionId, level: suggestion.level, concepts })
   return 0
 }
 
 /** `spar level` — the user overrides the suggestion. */
 export function cmdLevel(sessionId: string, level: Level): number {
   const state = readState(sessionId)
+  // Counted, because a user who constantly corrects the suggestion is telling you the
+  // thresholds are wrong — that is a fact about the design, not about them.
+  appendEvent({ type: 'override', session: sessionId, from: state.level, to: level })
   writeState({ ...state, level })
   console.log(`level set to ${level} (${LEVEL_NAMES[level]})`)
   return 0
@@ -48,6 +53,13 @@ export function cmdPredict(
     task: state.task ?? state.taskPrompt,
   })
   const blanks = Object.values(normalized).filter((a) => a === NO_IDEA).length
+  appendEvent({
+    type: 'predict',
+    session: sessionId,
+    level: state.level ?? 1,
+    blanks,
+    concepts: [],
+  })
   console.log(
     blanks === 3
       ? 'prediction recorded (all three blank — that is data, not failure)'
@@ -59,6 +71,7 @@ export function cmdPredict(
 /** `spar mark --trivial` — the agent judged this change not worth gating. */
 export function cmdMarkTrivial(sessionId: string): number {
   const state = readState(sessionId)
+  appendEvent({ type: 'trivial', session: sessionId })
   writeState({ ...state, trivial: true, level: state.level ?? 0 })
   console.log('marked trivial for this task')
   return 0
@@ -67,6 +80,7 @@ export function cmdMarkTrivial(sessionId: string): number {
 /** `spar rush` — degrade to level 0 for the rest of the session. Never off, only down. */
 export function cmdRush(sessionId: string, off: boolean): number {
   const state = readState(sessionId)
+  appendEvent({ type: 'rush', session: sessionId, on: !off })
   writeState({ ...state, rush: !off })
   console.log(off ? 'rush mode off' : 'rush mode on for this session')
   return 0

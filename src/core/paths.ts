@@ -18,6 +18,7 @@ export const paths = {
   home: sparHome,
   config: () => join(sparHome(), 'config.json'),
   gaps: () => join(sparHome(), 'gaps.jsonl'),
+  events: () => join(sparHome(), 'events.jsonl'),
   focus: () => join(sparHome(), 'focus.json'),
   dashboard: () => join(sparHome(), 'dashboard.html'),
   state: (sessionId: string) => join(sparHome(), 'state', `${sanitize(sessionId)}.json`),

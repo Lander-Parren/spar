@@ -99,6 +99,21 @@ spar log --session <id> --concept "<general concept>" \
 
 Without the CLI, use the bundled `scripts/log.sh` with the same arguments.
 
+## When a gap comes back
+
+At session start you may be handed one gap that has come due. Two rules:
+
+**Wait for a natural pause.** A quiz fired mid-debugging teaches nothing and gets the
+tool switched off. A task finishing, a related file coming up, the user asking
+something adjacent — those are the moments.
+
+**Ask before you show.** Have them explain the concept in their own words first. Then
+judge honestly and record `spar review --session <id> <gap-id> --ok` or `--nok`.
+Marking a shaky answer correct promotes the gap out of the rotation and hides it —
+and a hidden gap looks exactly like a learned one, which is the one failure this
+system cannot detect on its own. Getting it wrong is not a setback; it is the
+mechanism.
+
 ## What goes in the log
 
 Log the **concept and the shape of the misunderstanding, never the business logic.**

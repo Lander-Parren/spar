@@ -17,6 +17,8 @@ export interface Gap {
   project: string
   task: string
   agent: string
+  /** Session this was logged in. Lets a gap be tied back to the prediction it came from. */
+  session?: string
   level: Level
   kind: GapKind
   /** Which of the three questions this gap came from (1-3), if any. */

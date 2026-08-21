@@ -11,6 +11,8 @@ import {
 import { cmdLog } from './commands/log.js'
 import { cmdDone } from './commands/done.js'
 import { cmdPropose } from './commands/propose.js'
+import { cmdReview } from './commands/review.js'
+import { cmdStats } from './commands/stats.js'
 import { cmdSetup } from './commands/setup.js'
 import type { GapKind, Level } from './core/types.js'
 
@@ -25,10 +27,12 @@ const HELP = `spar — keep learning while AI writes the code
   spar done --session <id>
   spar next --session <id>
   spar propose --session <id> --file <path> [--text <content>]   (or pipe on stdin)
+  spar review --session <id> <gap-id> [--ok | --nok]
+  spar stats [--json]
   spar log --session <id> --concept <c> --model <what you thought> --reality <what was true>
            [--kind misconception|typo-bug|improvement] [--question 1|2|3]
 
-  spar hook <gate|boundary> --agent <name>     (called by agent hooks, reads stdin)
+  spar hook <gate|skeleton|boundary|due> --agent <name>   (called by agent hooks, reads stdin)
 
 Levels: 0 rush · 1 standard · 2 skeleton · 3 transcript
 `
@@ -59,6 +63,14 @@ async function main(): Promise<number> {
         q2: flags.string('q2'),
         q3: flags.string('q3'),
       })
+    case 'review':
+      return cmdReview(
+        requireSession(flags),
+        required(flags.positional[0], '<gap-id>'),
+        requireVerdict(flags),
+      )
+    case 'stats':
+      return cmdStats(flags.bool('json'))
     case 'propose':
       return cmdPropose(requireSession(flags), required(flags.string('file'), '--file'), flags.string('text'))
     case 'done':
@@ -133,6 +145,21 @@ function required(value: string | undefined, name: string): string {
     process.exit(1)
   }
   return value
+}
+
+/**
+ * Demand an explicit verdict. Defaulting to "correct" would let a forgotten flag
+ * quietly promote a gap out of the rotation — the one failure mode this system
+ * cannot detect, since a hidden gap looks exactly like a learned one.
+ */
+function requireVerdict(flags: Flags): boolean {
+  const ok = flags.bool('ok')
+  const nok = flags.bool('nok')
+  if (ok === nok) {
+    process.stderr.write('spar: pass exactly one of --ok or --nok\n')
+    process.exit(1)
+  }
+  return ok
 }
 
 function parseLevel(value: string | undefined): Level {

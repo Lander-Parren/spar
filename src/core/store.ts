@@ -1,4 +1,4 @@
-import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { paths } from './paths.js'
 import { emptyState, type Gap, type SessionState } from './types.js'
@@ -27,6 +27,35 @@ export function readGaps(): Gap[] {
     }
   }
   return gaps
+}
+
+/**
+ * Update one gap in place.
+ *
+ * The log is append-only everywhere else, but a review changes a gap's box and due
+ * date, so this rewrites the file. Writes to a temporary file and renames over the
+ * original: rename is atomic on POSIX, so a crash mid-write leaves you with the old
+ * history rather than a truncated one. Losing a review is annoying; losing the log
+ * would end the habit.
+ */
+export function updateGap(id: string, patch: Partial<Gap>): boolean {
+  const gaps = readGaps()
+  const index = gaps.findIndex((g) => g.id === id)
+  if (index === -1) return false
+
+  gaps[index] = { ...gaps[index]!, ...patch }
+  const body = gaps.map((g) => JSON.stringify(g)).join('\n') + '\n'
+  const target = paths.gaps()
+  const temp = `${target}.tmp`
+
+  mkdirSync(dirname(target), { recursive: true })
+  writeFileSync(temp, body, 'utf8')
+  renameSync(temp, target)
+  return true
+}
+
+export function findGap(id: string): Gap | undefined {
+  return readGaps().find((g) => g.id === id)
 }
 
 export function nextGapId(existing: Gap[]): string {
