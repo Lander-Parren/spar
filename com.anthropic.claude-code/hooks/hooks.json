@@ -1,0 +1,17 @@
+{
+  "description": "spar — predict before you're told. Inert until `spar setup --project <path>` names a project.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [{ "type": "command", "command": "spar hook gate --agent claude-code", "timeout": 5 }]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [{ "type": "command", "command": "spar hook boundary --agent claude-code", "timeout": 5 }]
+      }
+    ]
+  }
+}
