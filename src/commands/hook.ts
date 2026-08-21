@@ -1,4 +1,5 @@
 import { claudeCode } from '../adapters/claude-code.js'
+import { cursor } from '../adapters/cursor.js'
 import type { Adapter, EventKind, NormalizedDecision } from '../adapters/types.js'
 import { gate } from '../hooks/gate.js'
 import { boundary } from '../hooks/boundary.js'
@@ -7,6 +8,7 @@ import { due } from '../hooks/due.js'
 
 const ADAPTERS: Record<string, Adapter> = {
   'claude-code': claudeCode,
+  cursor,
 }
 
 const HOOKS: Record<string, { kind: EventKind; run: (e: never) => NormalizedDecision }> = {

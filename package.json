@@ -2,12 +2,29 @@
   "name": "spar-agent",
   "version": "0.1.0",
   "description": "Keep learning while AI writes the code. Predict before you're told, and turn every gap between your model and reality into a curriculum.",
-  "keywords": ["agent-skills", "claude-code", "cursor", "learning", "hooks", "deliberate-practice"],
+  "keywords": [
+    "agent-skills",
+    "claude-code",
+    "cursor",
+    "learning",
+    "hooks",
+    "deliberate-practice"
+  ],
   "license": "MIT",
   "type": "module",
-  "bin": { "spar": "dist/cli.js" },
-  "files": ["dist", "skills", "templates", "plugin.json", "mcp.json"],
-  "engines": { "node": ">=20" },
+  "bin": {
+    "spar": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "templates",
+    "plugin.json",
+    "mcp.json"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
@@ -17,6 +34,10 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^5.7.0",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
   }
 }

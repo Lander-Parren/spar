@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      { "command": "spar hook gate --agent cursor", "timeout": 5, "failClosed": false }
+    ],
+    "postToolUse": [
+      { "command": "spar hook skeleton --agent cursor", "timeout": 5, "failClosed": false }
+    ],
+    "beforeSubmitPrompt": [
+      { "command": "spar hook boundary --agent cursor", "timeout": 5, "failClosed": false }
+    ],
+    "sessionStart": [
+      { "command": "spar hook due --agent cursor", "timeout": 10, "failClosed": false }
+    ]
+  }
+}

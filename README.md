@@ -11,9 +11,8 @@ Those gaps become your curriculum. The concept you're wrong about most often ris
 the top on its own — and the friction moves there with it, so you never have to decide
 to work hard.
 
-> Status: slice 4 of 6 — feature-complete for one person. Gate, four levels,
-> closing review, spaced repetition, `spar stats` and the dashboard. The second
-> agent adapter, the MCP server and publishing are what remain.
+> Status: slice 5 of 6 — Claude Code and Cursor, plus an MCP server for everything
+> else. Publishing is what remains.
 
 ## Install
 
@@ -26,16 +25,34 @@ to work hard.
 Tier 1 is a 30-second trial. Tier 3 is the one that works, because the whole premise
 is that you won't do this voluntarily.
 
-## Quick start (tiers 2 + 3, Claude Code)
+## Quick start
 
 ```sh
 npm i -g spar-agent
+spar install                                    # detects your agents, backs up, merges
 spar setup --project /path/to/repo --stack ".NET"
 ```
 
-Then add the contents of `com.anthropic.claude-code/hooks/hooks.json` to your Claude
-Code hooks. Nothing happens in any directory you haven't named — a fresh install is
-completely inert.
+`spar install` never overwrites: it merges into what is already there, backs the file
+up first, and only ever replaces entries it put there itself. Run it twice and nothing
+changes the second time. Add `--dry-run` to see what it would write.
+
+Nothing happens in any directory you have not named — a fresh install is completely
+inert.
+
+## What each agent gets
+
+| | Claude Code | Cursor | Any MCP client | Any skills client |
+|---|---|---|---|---|
+| The three questions | ✅ | ✅ | ✅ | ✅ |
+| Gap log, spaced repetition, stats | ✅ | ✅ | ✅ | via `scripts/log.sh` |
+| **The gate — actual enforcement** | ✅ | ✅ | ✗ | ✗ |
+
+MCP is standardised where hooks are not, so the server works everywhere with no
+adapter. What it cannot do is the gate: an MCP server offers tools, it does not
+intercept the host's writes. That single limitation is why the per-agent hook adapters
+are worth maintaining — and why the voluntary tiers are a good trial but not a
+substitute.
 
 ## The levels
 

@@ -2,7 +2,7 @@
 name: spar
 description: Make the user predict before you implement, then show them where their model was wrong and log the gap. Use whenever you are about to write or edit source code in a project the user is learning — adding an endpoint, service, data model, migration, background job, or wiring up a dependency. Also use when the user says "spar", asks to be quizzed before you code, mentions predicting before implementing, wants to stop passively accepting AI output, or says they are not learning anything from a codebase.
 license: MIT
-compatibility: Works on its own. The optional `spar` CLI (npm i -g spar-agent) adds levels, spaced repetition, and a dashboard.
+compatibility: Works on its own. The optional `spar` CLI (npm i -g spar-agent) adds levels, spaced repetition, stats and a dashboard; its MCP server exposes the same as tools. Enforcement needs hooks, available in Claude Code and Cursor.
 allowed-tools: Bash(spar:*) Read
 metadata:
   author: landerparren

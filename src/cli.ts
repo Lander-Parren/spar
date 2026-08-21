@@ -15,11 +15,13 @@ import { cmdReview } from './commands/review.js'
 import { cmdStats } from './commands/stats.js'
 import { cmdDashboard } from './commands/dashboard.js'
 import { cmdFocus } from './commands/focus.js'
+import { cmdInstall } from './commands/install.js'
 import { cmdSetup } from './commands/setup.js'
 import type { GapKind, Level } from './core/types.js'
 
 const HELP = `spar — keep learning while AI writes the code
 
+  spar install [--agent claude-code|cursor] [--dry-run]
   spar setup --project <path> [--stack <name>] [--language <code>]
   spar suggest-level --session <id> --concept <c> [--concept <c> ...]
   spar level --session <id> <0-3>
@@ -37,6 +39,7 @@ const HELP = `spar — keep learning while AI writes the code
            [--kind misconception|typo-bug|improvement] [--question 1|2|3]
 
   spar hook <gate|skeleton|boundary|due> --agent <name>   (called by agent hooks, reads stdin)
+  spar mcp                                                (MCP server on stdio)
 
 Levels: 0 rush · 1 standard · 2 skeleton · 3 transcript
 `
@@ -50,6 +53,12 @@ async function main(): Promise<number> {
     case 'hook': {
       const name = argv[1] ?? ''
       return runHook(name, flags.string('agent') ?? 'claude-code')
+    }
+    case 'install':
+      return cmdInstall({ agent: flags.string('agent'), dryRun: flags.bool('dry-run') })
+    case 'mcp': {
+      const { runMcpServer } = await import('./mcp/server.js')
+      return runMcpServer()
     }
     case 'setup':
       return cmdSetup({
