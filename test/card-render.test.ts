@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { parseRole, roleSlots, type CardSpec } from '../src/core/card.js'
+import { parseBullet, parseRole, roleSlots, type CardSpec } from '../src/core/card.js'
 import { layout } from '../src/core/card-layout.js'
 import { THEMES } from '../src/render/card-theme.js'
-import { renderSvg } from '../src/render/card.js'
+import { renderCard, renderSvg } from '../src/render/card.js'
 
 const spec: CardSpec = {
   layout: 'chain', title: 't', subtitle: 's', bullets: [],
@@ -54,5 +54,48 @@ describe('renderSvg', () => {
         ['x', 'y', 'width', 'height', 'rx'].map((k) => attrs!.match(new RegExp(`\\b${k}="([^"]*)"`))?.[1]))
     expect(geometry(svg('neon'))).toEqual(geometry(svg('plain')))
     expect(geometry(svg('neon'))).toHaveLength(2)
+  })
+})
+
+const full: CardSpec = {
+  layout: 'chain',
+  title: "Predict before you're told",
+  subtitle: 'The gap between your guess and what was true is worth writing down.',
+  bullets: [parseBullet('You take a position|before the answer exists'), parseBullet('Plain one')],
+  close: 'Without predicting first, reviewing finished code teaches you almost nothing.',
+  steps: [parseRole('you:You predict'), parseRole('ai:AI implements')],
+}
+const page = () => renderCard(full, layout(full, roleSlots(full)), THEMES.neon)
+
+describe('renderCard', () => {
+  it('produces a complete document with nothing left unfilled', () => {
+    expect(page().startsWith('<!doctype html>')).toBe(true)
+    expect(page()).not.toMatch(/\{\{[A-Z_]+\}\}/)
+  })
+
+  it('renders title, subtitle and close', () => {
+    expect(page()).toContain('Predict before you&#39;re told')
+    expect(page()).toContain('worth writing down')
+    expect(page()).toContain('teaches you almost nothing')
+  })
+
+  it('renders both halves of a two-tone bullet, and copes without a muted half', () => {
+    expect(page()).toContain('You take a position')
+    expect(page()).toContain('before the answer exists')
+    expect(page()).toContain('Plain one')
+  })
+
+  it('omits the close block entirely when there is none', () => {
+    const out = renderCard({ ...full, close: undefined }, layout(full, roleSlots(full)), THEMES.neon)
+    expect(out).not.toContain('class="close"')
+  })
+
+  it('reaches the network nowhere', () => {
+    expect(page()).not.toMatch(/https?:\/\//)
+    expect(page()).not.toMatch(/<link\b|\bsrc=/)
+  })
+
+  it('paints the theme background explicitly, so it never borrows a host colour', () => {
+    expect(page()).toContain(THEMES.neon.bg)
   })
 })

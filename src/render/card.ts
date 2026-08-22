@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+import type { CardSpec } from '../core/card.js'
 import type { Arrow, Box, FloatLabel, Layout2D } from '../core/card-layout.js'
 import type { Theme } from './card-theme.js'
 
@@ -68,4 +72,41 @@ function label(t: FloatLabel, theme: Theme): string {
       ? `fill="${theme.accent}" font-size="19" font-weight="600" font-style="italic"`
       : `fill="${theme.muted}" font-size="17"`
   return `<text x="${t.x}" y="${t.y}" text-anchor="${t.anchor}" ${style}>${esc(t.text)}</text>`
+}
+
+/**
+ * Render a whole page.
+ *
+ * Everything is inline. The file has to open offline, from a double click, years from
+ * now, which rules out a CDN, a web font and a chart library alike.
+ */
+export function renderCard(spec: CardSpec, l: Layout2D, theme: Theme): string {
+  const bullets = spec.bullets.length
+    ? '<ul>' +
+      spec.bullets
+        .map((b, i) => {
+          // Dots follow the role slots, so the list is tied to the picture rather than
+          // decorated with colour that means nothing.
+          const c = theme.roles[i % theme.roles.length]!
+          const muted = b.muted ? ` <span>${esc(b.muted)}</span>` : ''
+          return `<li><i style="background:${c}"></i><div>${esc(b.visible)}${muted}</div></li>`
+        })
+        .join('') +
+      '</ul>'
+    : ''
+
+  return readFileSync(templatePath(), 'utf8')
+    .replaceAll('{{TITLE}}', esc(spec.title))
+    .replace('{{SUBTITLE}}', esc(spec.subtitle))
+    .replace('{{SVG}}', renderSvg(l, theme))
+    .replace('{{BULLETS}}', bullets)
+    .replace('{{CLOSE}}', spec.close ? `<p class="close">${esc(spec.close)}</p>` : '')
+    .replaceAll('{{BG}}', theme.bg)
+    .replaceAll('{{INK}}', theme.ink)
+    .replaceAll('{{MUTED}}', theme.muted)
+}
+
+function templatePath(): string {
+  // dist/render/card.js -> ../../templates/card.html
+  return join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'templates', 'card.html')
 }
