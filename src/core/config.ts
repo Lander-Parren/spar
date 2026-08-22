@@ -23,6 +23,12 @@ export function loadConfig(): Config {
         typeof parsed.idleMinutes === 'number' && parsed.idleMinutes > 0
           ? parsed.idleMinutes
           : DEFAULT_CONFIG.idleMinutes,
+      cards: {
+        theme:
+          typeof (parsed.cards as { theme?: unknown } | undefined)?.theme === 'string'
+            ? (parsed.cards as { theme: string }).theme
+            : DEFAULT_CONFIG.cards.theme,
+      },
     }
   } catch {
     return { ...DEFAULT_CONFIG, projects: [] }

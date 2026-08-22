@@ -48,6 +48,8 @@ export interface Config {
   focusDays: number
   /** Minutes of silence on a task before the gate re-arms. See hooks/boundary.ts. */
   idleMinutes: number
+  /** Card appearance. See render/card-theme.ts. */
+  cards: { theme: string }
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -55,6 +57,7 @@ export const DEFAULT_CONFIG: Config = {
   language: 'en',
   focusDays: 14,
   idleMinutes: 30,
+  cards: { theme: 'neon' },
 }
 
 /** Per-session, per-task state. Reset when a new task starts. */
