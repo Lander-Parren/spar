@@ -1,0 +1,94 @@
+import { describe, expect, it } from 'vitest'
+import { parseMessage, parsePane, parseRole, roleSlots, type CardSpec } from '../src/core/card.js'
+import { CARD_W, CHAR_W, layout, type Layout2D } from '../src/core/card-layout.js'
+
+/**
+ * The ways small diagrams actually break, as assertions.
+ *
+ * Overlapping boxes, a label wider than the box holding it, content outside the
+ * viewBox, an arrow slicing through an unrelated node, and a viewBox padded with dead
+ * space. Every layout runs through this, at both ends of its range.
+ */
+function expectSaneGeometry(l: Layout2D): void {
+  for (const b of l.boxes) {
+    expect(b.x).toBeGreaterThanOrEqual(0)
+    expect(b.y).toBeGreaterThanOrEqual(0)
+    expect(b.x + b.w).toBeLessThanOrEqual(l.width)
+    expect(b.y + b.h).toBeLessThanOrEqual(l.height)
+    expect(b.label.length * CHAR_W).toBeLessThanOrEqual(b.w - 24)
+  }
+  for (let i = 0; i < l.boxes.length; i++) {
+    for (let j = i + 1; j < l.boxes.length; j++) {
+      const a = l.boxes[i]!, b = l.boxes[j]!
+      const apart = a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y
+      expect(apart).toBe(true)
+    }
+  }
+  for (const a of l.arrows) {
+    if (a.curved) continue
+    for (const b of l.boxes) {
+      const start = a.points[0]!
+      const end = a.points.at(-1)!
+      const touches = (p: [number, number]) =>
+        p[0] >= b.x - 8 && p[0] <= b.x + b.w + 8 && p[1] >= b.y - 8 && p[1] <= b.y + b.h + 8
+      if (touches(start) || touches(end)) continue
+      const crosses = a.points.some((p) => p[0] > b.x && p[0] < b.x + b.w && p[1] > b.y && p[1] < b.y + b.h)
+      expect(crosses).toBe(false)
+    }
+  }
+  const bottom = Math.max(...l.boxes.map((b) => b.y + b.h), ...l.labels.map((t) => t.y))
+  expect(l.height - bottom).toBeLessThanOrEqual(60)
+}
+
+function chain(n: number, loop?: string): CardSpec {
+  const steps = Array.from({ length: n }, (_, i) => parseRole(`r${i % 3}:step ${i + 1}`))
+  return { layout: 'chain', title: 't', subtitle: 's', bullets: [], steps, ...(loop ? { loop } : {}) }
+}
+
+describe('chain layout', () => {
+  it('places one box per step', () => {
+    const spec = chain(4)
+    expect(layout(spec, roleSlots(spec)).boxes).toHaveLength(4)
+  })
+
+  it('is geometrically sane at both ends of its range', () => {
+    for (const n of [2, 3, 4, 5]) {
+      const spec = chain(n)
+      expectSaneGeometry(layout(spec, roleSlots(spec)))
+    }
+  })
+
+  it('lays the steps out left to right in order', () => {
+    const spec = chain(4)
+    const xs = layout(spec, roleSlots(spec)).boxes.map((b) => b.x)
+    expect([...xs].sort((a, b) => a - b)).toEqual(xs)
+  })
+
+  it('draws one connector between each neighbouring pair', () => {
+    const spec = chain(4)
+    const l = layout(spec, roleSlots(spec))
+    expect(l.arrows.filter((a) => !a.curved)).toHaveLength(3)
+  })
+
+  it('adds a curved arrow and its label only when a loop is asked for', () => {
+    const withoutLoop = chain(3)
+    expect(layout(withoutLoop, roleSlots(withoutLoop)).arrows.some((a) => a.curved)).toBe(false)
+    const withLoop = chain(3, 'sets the next level')
+    const l = layout(withLoop, roleSlots(withLoop))
+    expect(l.arrows.some((a) => a.curved)).toBe(true)
+    expect(l.labels.some((t) => t.text === 'sets the next level')).toBe(true)
+  })
+
+  it('gives every box the slot of its role', () => {
+    const spec = chain(4)
+    const slots = roleSlots(spec)
+    const l = layout(spec, slots)
+    expect(l.boxes[0]!.slot).toBe(slots.get('r0'))
+    expect(l.boxes[3]!.slot).toBe(slots.get('r0'))
+  })
+
+  it('keeps the canvas at a fixed width', () => {
+    const spec = chain(5)
+    expect(layout(spec, roleSlots(spec)).width).toBe(CARD_W)
+  })
+})
