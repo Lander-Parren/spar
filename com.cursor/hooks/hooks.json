@@ -28,6 +28,13 @@
         "timeout": 10,
         "failClosed": false
       }
+    ],
+    "stop": [
+      {
+        "command": "spar hook handover --agent cursor",
+        "timeout": 60,
+        "failClosed": false
+      }
     ]
   }
 }

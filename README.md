@@ -138,8 +138,24 @@ look: `neon` (the default, dark with outlined boxes) or `plain`.
 |---|---|---|
 | **0** rush | everything | one 30 second question afterwards |
 | **1** standard | implements | predict first, compare after |
-| **2** skeleton | wiring and signatures, leaving `TODO(spar:)` | write the 5 to 10 lines that carry the decision |
-| **3** transcript | delivers in chat, writes nothing | write and place it yourself |
+| **2** skeleton | wiring, signatures and a failing test, leaving `TODO(spar:)` | write the 5 to 10 lines that carry the decision |
+| **3** transcript | writes the test and nothing else, delivers the rest in chat | write and place it yourself |
+
+At levels 2 and 3 the agent always leaves a failing test behind, and spar refuses the
+handover if it does not. A marker with no test hands you a guess and nothing to check it
+against, so the only way to find out whether you were right is to ask the agent, which is
+the dependency the whole tool exists to break. The test is what lets you work alone for
+twenty minutes and still know.
+
+Set `testCommand` on a project and spar also runs the suite at handover and expects it to
+be red, because a test that already passes against an empty stub pins nothing:
+
+```sh
+spar setup --project "$(pwd)" --test-command "npm test"
+```
+
+That check is off by default. Running someone else's suite automatically is invasive and
+can be slow.
 
 There is no off switch, only level 0. Your own gap log suggests the level and tells you why,
 and you can always overrule it. Overrules get counted, because someone constantly correcting

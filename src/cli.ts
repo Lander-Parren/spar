@@ -24,7 +24,7 @@ import type { GapKind, Level } from './core/types.js'
 const HELP = `spar — keep learning while AI writes the code
 
   spar install [--agent claude-code|cursor] [--dry-run]
-  spar setup --project <path> [--stack <name>] [--language <code>]
+  spar setup --project <path> [--stack <name>] [--language <code>] [--test-command <cmd>]
   spar suggest-level --session <id> --concept <c> [--concept <c> ...]
   spar level --session <id> <0-3>
   spar predict --session <id> [--q1 <a>] [--q2 <a>] [--q3 <a>]
@@ -70,6 +70,7 @@ async function main(): Promise<number> {
         project: flags.string('project'),
         stack: flags.string('stack'),
         language: flags.string('language'),
+        testCommand: flags.string('test-command'),
       })
     case 'suggest-level':
       return cmdSuggestLevel(requireSession(flags), flags.all('concept'))

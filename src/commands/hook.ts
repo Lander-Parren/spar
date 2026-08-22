@@ -5,6 +5,7 @@ import { gate } from '../hooks/gate.js'
 import { boundary } from '../hooks/boundary.js'
 import { skeleton } from '../hooks/skeleton.js'
 import { due } from '../hooks/due.js'
+import { handover } from '../hooks/handover.js'
 
 const ADAPTERS: Record<string, Adapter> = {
   'claude-code': claudeCode,
@@ -16,6 +17,7 @@ const HOOKS: Record<string, { kind: EventKind; run: (e: never) => NormalizedDeci
   boundary: { kind: 'prompt', run: boundary as never },
   skeleton: { kind: 'post-tool', run: skeleton as never },
   due: { kind: 'session-start', run: due as never },
+  handover: { kind: 'stop', run: handover as never },
 }
 
 /**

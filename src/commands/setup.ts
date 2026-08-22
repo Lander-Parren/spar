@@ -3,7 +3,12 @@ import { loadConfig, saveConfig } from '../core/config.js'
 import { paths } from '../core/paths.js'
 
 /** `spar setup --project <path>` — the one step that makes spar do anything at all. */
-export function cmdSetup(opts: { project?: string; stack?: string; language?: string }): number {
+export function cmdSetup(opts: {
+  project?: string
+  stack?: string
+  language?: string
+  testCommand?: string
+}): number {
   const config = loadConfig()
 
   if (opts.language) config.language = opts.language
@@ -13,8 +18,13 @@ export function cmdSetup(opts: { project?: string; stack?: string; language?: st
     const existing = config.projects.find((p) => resolve(p.path) === path)
     if (existing) {
       if (opts.stack) existing.stack = opts.stack
+      if (opts.testCommand) existing.testCommand = opts.testCommand
     } else {
-      config.projects.push({ path, ...(opts.stack ? { stack: opts.stack } : {}) })
+      config.projects.push({
+        path,
+        ...(opts.stack ? { stack: opts.stack } : {}),
+        ...(opts.testCommand ? { testCommand: opts.testCommand } : {}),
+      })
     }
   }
 
@@ -27,7 +37,11 @@ export function cmdSetup(opts: { project?: string; stack?: string; language?: st
     console.log('  spar setup --project /path/to/repo --stack ".NET"')
   } else {
     console.log('projects:')
-    for (const p of config.projects) console.log(`  ${p.path}${p.stack ? `  [${p.stack}]` : ''}`)
+    for (const p of config.projects) {
+      console.log(
+        `  ${p.path}${p.stack ? `  [${p.stack}]` : ''}${p.testCommand ? `  test: ${p.testCommand}` : ''}`,
+      )
+    }
   }
   return 0
 }

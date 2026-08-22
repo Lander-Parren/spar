@@ -48,6 +48,18 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "spar hook handover --agent claude-code",
+            "timeout": 60
+          }
+        ]
+      }
     ]
   }
 }

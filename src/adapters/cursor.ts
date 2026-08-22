@@ -64,6 +64,11 @@ export const cursor: Adapter = {
       case 'context':
         return { stdout: JSON.stringify({ additional_context: decision.context }), stderr: '', exitCode: 0 }
 
+      case 'block':
+        // Cursor's stop hook has no refusal; a follow-up message keeps the agent going,
+        // which is the same outcome by a different name.
+        return { stdout: JSON.stringify({ followup_message: decision.reason }), stderr: '', exitCode: 0 }
+
       case 'feedback':
         // postToolUse cannot block here, so the complaint rides along as context.
         return {

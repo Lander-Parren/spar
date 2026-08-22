@@ -54,6 +54,28 @@ describe('gate', () => {
     if (decision.type === 'deny') expect(decision.agentMessage).toContain('spar suggest-level')
   })
 
+  it('lets a test through at level 3, because the test is the brief', async () => {
+    config([project]); state('s1', { level: 3, predicted: true })
+    expect((await run({ filePath: join(project, 'test', 'orders.test.ts') })).type).toBe('allow')
+    expect((await run({ filePath: join(project, 'src', 'orders.ts') })).type).toBe('deny')
+  })
+
+  it('lets a test through at level 3 when it arrives via the shell too', async () => {
+    config([project]); state('s1', { level: 3, predicted: true })
+    const decision = await run({
+      toolName: 'Bash',
+      command: `cat > ${join(project, 'test', 'orders.test.ts')} <<'EOF'\nx\nEOF`,
+    })
+    expect(decision.type).toBe('allow')
+  })
+
+  it.each([2, 3])('records a test written at level %i, so handover can check', async (level) => {
+    config([project]); state('s1', { level, predicted: true })
+    await run({ filePath: join(project, 'test', 'orders.test.ts') })
+    const { readState } = await import('../src/core/store.js')
+    expect(readState('s1').testWritten).toBe(true)
+  })
+
   it('fires when the file is in a tracked project, wherever the agent was started', async () => {
     config([project])
     const decision = await run({ cwd: tmpdir(), filePath: join(project, 'src', 'a.cs') })
