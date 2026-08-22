@@ -92,6 +92,17 @@ describe('skeleton check', () => {
     rmSync(outside, { recursive: true, force: true })
   })
 
+  it('checks a file written by the shell, not just by a write tool', async () => {
+    state({ level: 2 })
+    const path = writeFile('viaShell.cs', 'var x = OpenTransaction();')
+    const { skeleton } = await import('../src/hooks/skeleton.js')
+    const decision = skeleton({
+      kind: 'post-tool', agent: 'claude-code', sessionId: 's1', cwd: project,
+      toolName: 'Bash', command: `cat > ${path} <<'EOF'\nbody\nEOF`,
+    } as never)
+    expect(decision.type).toBe('feedback')
+  })
+
   it('records the skeleton so the closing review has something to diff', async () => {
     state({ level: 2 })
     await run(writeFile('a.cs', '// TODO(spar: decide)'))

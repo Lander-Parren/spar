@@ -20,6 +20,7 @@ export const claudeCode: Adapter = {
       toolName: str(raw.tool_name),
       filePath: str(input.file_path),
       content: str(input.content) ?? str(input.new_string),
+      command: str(input.command),
       prompt: str(raw.user_prompt) ?? str(raw.prompt),
     }
   },

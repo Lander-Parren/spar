@@ -1,10 +1,14 @@
-import { loadConfig, trackedFor } from '../core/config.js'
+import { loadConfig, trackedFor, trackedProject } from '../core/config.js'
+import { writeTargets } from '../core/shell-writes.js'
 import { readState, touchTask } from '../core/store.js'
 import { LEVEL_NAMES } from '../core/types.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 
 /** Tools that put text on disk. Anything else is none of our business. */
 const WRITE_TOOLS = /^(Write|Edit|MultiEdit|str_replace|create_file|write_file)$/i
+
+/** Tools that run a shell command, where a write hides inside the command string. */
+const SHELL_TOOLS = /^(Bash|Shell|run_command|run_terminal_cmd|execute_command)$/i
 
 /**
  * The gate. Cheap checks first, so the common case costs a few milliseconds.
@@ -14,9 +18,17 @@ const WRITE_TOOLS = /^(Write|Edit|MultiEdit|str_replace|create_file|write_file)$
  */
 export function gate(event: NormalizedEvent): NormalizedDecision {
   try {
-    if (event.toolName && !WRITE_TOOLS.test(event.toolName)) return { type: 'allow' }
-
     const config = loadConfig()
+
+    if (event.toolName && SHELL_TOOLS.test(event.toolName)) {
+      // A shell command is a write only if it actually writes somewhere tracked. This
+      // is where most writes really happen: an agent reaches for `cat > f <<EOF` far
+      // more often than for a write tool, and some setups tell it to.
+      const targets = writeTargets(event.command ?? '', event.cwd)
+      if (!targets.some((path) => trackedProject(path, config))) return { type: 'allow' }
+    } else if (event.toolName && !WRITE_TOOLS.test(event.toolName)) {
+      return { type: 'allow' }
+    }
     // By working directory or by target file: starting the agent a level up must not
     // quietly switch the gate off.
     const project = trackedFor(event.cwd, event.filePath, config)

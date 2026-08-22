@@ -173,6 +173,14 @@ gate opens and you carry on. A learning tool should never be the reason you cann
 
 Once per task, not once per file. Fifteen edits behind one prediction is one gate.
 
+It watches shell commands as well as write tools, because an agent reaches for
+`cat > file <<EOF` or `perl -0pi` far more often than for a dedicated write tool, and some
+setups tell it to prefer exactly that. A shell command is only stopped when it actually
+writes somewhere inside a tracked project: redirects, `tee`, in-place `sed` and `perl`,
+`cp` and `mv` destinations, and interpreter one-liners that open a file for writing. Reads
+and test runs go through untouched. Shell is not parseable by regex, so this is
+deliberately conservative and misses exotic forms rather than stopping ordinary work.
+
 A task stays alive as long as there is movement in it, and lapses after 30 minutes of
 silence (`idleMinutes` in `~/.spar/config.json`). That measures idleness rather than age, so
 a long careful task never gets interrupted halfway through. If you are starting something

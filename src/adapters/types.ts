@@ -19,6 +19,8 @@ export interface NormalizedEvent {
   filePath?: string
   /** The text being written, when the agent exposes it. Used by the skeleton check. */
   content?: string
+  /** The shell command, for tools that run one. The gate inspects it for file writes. */
+  command?: string
   /** prompt only. */
   prompt?: string
 }
