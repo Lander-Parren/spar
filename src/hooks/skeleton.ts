@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { loadConfig, trackedProject } from '../core/config.js'
+import { loadConfig, trackedFor } from '../core/config.js'
 import { readState } from '../core/store.js'
 import { addProposal, readProposals } from '../core/proposals.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
@@ -28,7 +28,7 @@ export function skeleton(event: NormalizedEvent): NormalizedDecision {
     if (event.toolName && !WRITE_TOOLS.test(event.toolName)) return { type: 'noop' }
 
     const config = loadConfig()
-    if (!trackedProject(event.cwd, config)) return { type: 'noop' }
+    if (!trackedFor(event.cwd, event.filePath, config)) return { type: 'noop' }
 
     const state = readState(event.sessionId)
     if (state.level !== 2 || state.trivial || state.rush) return { type: 'noop' }

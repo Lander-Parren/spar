@@ -45,7 +45,23 @@ function isProject(p: unknown): p is ProjectConfig {
 }
 
 /**
- * Is this working directory inside a tracked project?
+ * The project a hook event belongs to, by working directory or by target file.
+ *
+ * Checking only the working directory left the gate bypassable by accident: start the
+ * agent one directory up, edit the very same file, and spar silently did nothing. The
+ * inert guarantee is unchanged, since an event that touches no tracked project at all
+ * still matches nothing.
+ */
+export function trackedFor(
+  cwd: string,
+  filePath: string | undefined,
+  config: Config,
+): ProjectConfig | undefined {
+  return trackedProject(cwd, config) ?? (filePath ? trackedProject(filePath, config) : undefined)
+}
+
+/**
+ * Is this path inside a tracked project?
  *
  * Compares on path segments, so /work/api does not match /work/api-legacy.
  * Returns the matching project (deepest match wins, for nested repos) or undefined.

@@ -1,4 +1,4 @@
-import { loadConfig, trackedProject } from '../core/config.js'
+import { loadConfig, trackedFor } from '../core/config.js'
 import { readState, touchTask } from '../core/store.js'
 import { LEVEL_NAMES } from '../core/types.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
@@ -17,8 +17,10 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     if (event.toolName && !WRITE_TOOLS.test(event.toolName)) return { type: 'allow' }
 
     const config = loadConfig()
-    const project = trackedProject(event.cwd, config)
-    // Not a tracked project — the inert guarantee. A fresh install does nothing.
+    // By working directory or by target file: starting the agent a level up must not
+    // quietly switch the gate off.
+    const project = trackedFor(event.cwd, event.filePath, config)
+    // Neither is tracked: the inert guarantee. A fresh install does nothing.
     if (!project) return { type: 'allow' }
 
     const state = readState(event.sessionId)
