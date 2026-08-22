@@ -182,3 +182,38 @@ describe('sequence layout', () => {
     expect(lifelines).toHaveLength(2)
   })
 })
+
+function compare(): CardSpec {
+  return {
+    layout: 'compare', title: 't', subtitle: 's', bullets: [],
+    panes: [
+      parsePane('good:Transparent failure|Returns a structured error the caller can act on'),
+      parsePane('bad:Silent failure|Looks successful and surfaces much later'),
+    ],
+  }
+}
+
+describe('compare layout', () => {
+  it('stacks exactly two panes', () => {
+    const spec = compare()
+    const l = layout(spec, roleSlots(spec))
+    expect(l.boxes).toHaveLength(2)
+    expect(l.boxes[0]!.y + l.boxes[0]!.h).toBeLessThanOrEqual(l.boxes[1]!.y)
+  })
+
+  it('is geometrically sane', () => {
+    const spec = compare()
+    expectSaneGeometry(layout(spec, roleSlots(spec)))
+  })
+
+  it('carries the body text through, since a pane is title plus body', () => {
+    const spec = compare()
+    const l = layout(spec, roleSlots(spec))
+    expect(l.boxes[0]!.body).toContain('structured error')
+  })
+
+  it('draws no arrows, because a comparison has no flow', () => {
+    const spec = compare()
+    expect(layout(spec, roleSlots(spec)).arrows).toHaveLength(0)
+  })
+})

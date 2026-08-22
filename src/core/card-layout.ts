@@ -51,6 +51,8 @@ export function layout(spec: CardSpec, slots: Map<string, number>): Layout2D {
       return fanout(spec, slots)
     case 'sequence':
       return sequence(spec, slots)
+    case 'compare':
+      return compare(spec, slots)
     default:
       throw new Error(`layout not implemented: ${spec.layout}`)
   }
@@ -171,4 +173,19 @@ function sequence(spec: CardSpec, slots: Map<string, number>): Layout2D {
   })
 
   return { width: CARD_W, height: bottom + MARGIN, boxes, arrows, labels }
+}
+
+function compare(spec: CardSpec, slots: Map<string, number>): Layout2D {
+  const panes = spec.panes ?? []
+  const w = CARD_W - 2 * MARGIN
+  const h = 150
+  const gap = 34
+  // No connectors: a comparison has no flow, and an arrow between two contrasted
+  // things would claim a relationship that is not there.
+  const boxes: Box[] = panes.map((p, i) => ({
+    x: MARGIN, y: 40 + i * (h + gap), w, h,
+    label: p.title, body: p.body, slot: slotOf(slots, p.role),
+  }))
+  const last = boxes.at(-1)!
+  return { width: CARD_W, height: last.y + last.h + MARGIN, boxes, arrows: [], labels: [] }
 }
