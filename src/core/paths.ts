@@ -21,6 +21,8 @@ export const paths = {
   events: () => join(sparHome(), 'events.jsonl'),
   focus: () => join(sparHome(), 'focus.json'),
   dashboard: () => join(sparHome(), 'dashboard.html'),
+  cards: () => join(sparHome(), 'cards'),
+  card: (slug: string) => join(sparHome(), 'cards', `${slug}.html`),
   state: (sessionId: string) => join(sparHome(), 'state', `${sanitize(sessionId)}.json`),
   stateDir: () => join(sparHome(), 'state'),
 }
