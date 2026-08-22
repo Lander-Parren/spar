@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative } from 'node:path'
-import { readState } from '../core/store.js'
+import { readTask } from '../core/task-state.js'
 import { loadConfig, trackedProject } from '../core/config.js'
 import { readProposals } from '../core/proposals.js'
 import { diffLines, hasChanges, renderDiff } from '../core/diff.js'
@@ -15,8 +15,8 @@ import { GUIDE } from '../core/guide.js'
  * chat teaches you something only if somebody checks afterwards whether you
  * understood it or merely typed it. The diff is the check.
  */
-export function cmdDone(sessionId: string): number {
-  const state = readState(sessionId)
+export function cmdDone(sessionId: string, cwd: string = process.cwd()): number {
+  const state = readTask(sessionId, cwd)
   const level = state.level ?? 1
 
   if (level < 2) {

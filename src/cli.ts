@@ -46,6 +46,8 @@ const HELP = `spar — keep learning while AI writes the code
   spar hook <gate|skeleton|boundary|due> --agent <name>   (called by agent hooks, reads stdin)
   spar mcp                                                (MCP server on stdio)
 
+  (any session command also takes --cwd <path> when it is not run inside the project)
+
 Levels: 0 rush · 1 standard · 2 skeleton · 3 transcript
 `
 
@@ -75,15 +77,15 @@ async function main(): Promise<number> {
         testCommand: flags.string('test-command'),
       })
     case 'suggest-level':
-      return cmdSuggestLevel(requireSession(flags), flags.all('concept'))
+      return cmdSuggestLevel(requireSession(flags), flags.all('concept'), cwdOf(flags))
     case 'level':
-      return cmdLevel(requireSession(flags), parseLevel(flags.positional[0]))
+      return cmdLevel(requireSession(flags), parseLevel(flags.positional[0]), cwdOf(flags))
     case 'predict':
-      return cmdPredict(requireSession(flags), {
-        q1: flags.string('q1'),
-        q2: flags.string('q2'),
-        q3: flags.string('q3'),
-      })
+      return cmdPredict(
+        requireSession(flags),
+        { q1: flags.string('q1'), q2: flags.string('q2'), q3: flags.string('q3') },
+        cwdOf(flags),
+      )
     case 'review':
       return cmdReview(
         requireSession(flags),
@@ -119,13 +121,13 @@ async function main(): Promise<number> {
     case 'propose':
       return cmdPropose(requireSession(flags), required(flags.string('file'), '--file'), flags.string('text'))
     case 'done':
-      return cmdDone(requireSession(flags))
+      return cmdDone(requireSession(flags), cwdOf(flags))
     case 'next':
-      return cmdNext(requireSession(flags))
+      return cmdNext(requireSession(flags), cwdOf(flags))
     case 'mark':
-      return cmdMarkTrivial(requireSession(flags))
+      return cmdMarkTrivial(requireSession(flags), cwdOf(flags))
     case 'rush':
-      return cmdRush(requireSession(flags), flags.bool('off'))
+      return cmdRush(requireSession(flags), flags.bool('off'), cwdOf(flags))
     case 'log':
       return cmdLog({
         sessionId: requireSession(flags),
@@ -134,6 +136,7 @@ async function main(): Promise<number> {
         reality: required(flags.string('reality'), '--reality'),
         kind: flags.string('kind') as GapKind | undefined,
         question: parseQuestion(flags.string('question')),
+        cwd: cwdOf(flags),
       })
     case 'help':
     case '--help':
@@ -182,6 +185,17 @@ function parseFlags(argv: string[]): Flags {
 
 function requireSession(flags: Flags): string {
   return required(flags.string('session'), '--session')
+}
+
+/**
+ * Which project this command is about.
+ *
+ * Normally the directory the agent is running in, which is the same one the gate matched
+ * on. `--cwd` exists for scripts and for the rare agent that runs the CLI from somewhere
+ * else, so a plan is never invisible just because the shell started a level up.
+ */
+function cwdOf(flags: Flags): string {
+  return flags.string('cwd') ?? process.cwd()
 }
 
 function required(value: string | undefined, name: string): string {

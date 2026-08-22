@@ -1,6 +1,7 @@
 import { basename } from 'node:path'
 import { loadConfig, trackedProject } from '../core/config.js'
-import { appendGap, nextGapId, readGaps, readState } from '../core/store.js'
+import { appendGap, nextGapId, readGaps } from '../core/store.js'
+import { readTask } from '../core/task-state.js'
 import type { Gap, GapKind, Level } from '../core/types.js'
 
 export interface LogArgs {
@@ -23,7 +24,7 @@ export function cmdLog(args: LogArgs): number {
   const config = loadConfig()
   const cwd = args.cwd ?? process.cwd()
   const project = trackedProject(cwd, config)
-  const state = readState(args.sessionId)
+  const state = readTask(args.sessionId, cwd)
   const gaps = readGaps()
 
   const gap: Gap = {
