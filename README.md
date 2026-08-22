@@ -112,6 +112,26 @@ click, in five years.
 There are no streaks, points or badges anywhere in it. In a tool where "no idea" is a useful
 answer, a counter would just teach you to fake competence.
 
+## Explaining with a picture
+
+```sh
+spar card --layout chain --title "Predict before you're told" \
+  --subtitle "The gap between your guess and what was true is worth writing down." \
+  --step "you:You predict" --step "agent:AI implements" --step "you:You compare"
+```
+
+One idea per card, written to `~/.spar/cards/`. Four layouts cover most explanations: a
+chain of steps, a fan-out, a sequence between two parties, and a comparison.
+
+The limits are enforced rather than suggested. More than five steps, more than three
+bullets, or a fourth colour role and the command refuses to render. That is deliberate,
+because the whole value of a small picture is that it stayed small, and a rule that only
+lives in a prompt drifts. If it will not render, the answer is two cards.
+
+Colour marks what something is, never which step it is, so `--step "you:..."` keeps `you`
+the same colour on every card you make. `cards.theme` in `~/.spar/config.json` picks the
+look: `neon` (the default, dark with outlined boxes) or `plain`.
+
 ## The levels
 
 | Level | The agent does | You do |

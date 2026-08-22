@@ -80,3 +80,37 @@ describe('spar card', () => {
     expect(readdirSync(join(home, 'cards')).sort()).toEqual(['cmp.html', 'fan.html', 'seq.html'])
   })
 })
+
+describe('the two moments that ask for a card', () => {
+  it('spar done suggests a compare card once there is something to compare', async () => {
+    const { mkdirSync, writeFileSync } = await import('node:fs')
+    mkdirSync(join(home, 'state'), { recursive: true })
+    writeFileSync(join(home, 'state', 's1.json'), JSON.stringify({
+      sessionId: 's1', predicted: true, rush: false, trivial: false,
+      editsSincePrediction: 0, level: 3,
+    }))
+    const file = join(home, 'Thing.cs')
+    writeFileSync(file, 'written by the user\n')
+    writeFileSync(join(home, 'state', 's1-proposals.json'), JSON.stringify([
+      { file, content: 'proposed by the agent\n', source: 'chat', ts: '2026-08-21T00:00:00Z' },
+    ]))
+
+    const lines: string[] = []
+    vi.spyOn(console, 'log').mockImplementation((s?: unknown) => { lines.push(String(s)) })
+    const { cmdDone } = await import('../src/commands/done.js')
+    cmdDone('s1')
+    expect(lines.join('\n')).toContain('spar card --layout compare')
+  })
+
+  it('the due hook asks for a card when the user cannot answer', async () => {
+    const { readFileSync: read } = await import('node:fs')
+    expect(read('src/hooks/due.ts', 'utf8')).toContain('spar card')
+  })
+
+  it('the skill tells the agent when a card is worth it', async () => {
+    const { readFileSync: read } = await import('node:fs')
+    const skill = read('skills/spar/SKILL.md', 'utf8')
+    expect(skill).toContain('spar card')
+    expect(skill).toMatch(/three or more moving parts/i)
+  })
+})

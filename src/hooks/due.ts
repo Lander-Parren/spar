@@ -45,6 +45,10 @@ export function due(event: NormalizedEvent): NormalizedDecision {
         '',
         'Be honest in that judgement. Marking a shaky answer correct removes the gap from',
         'the rotation and quietly hides it, which is the one failure this system cannot see.',
+        '',
+        'If they cannot answer and the concept has three or more moving parts, explain it',
+        'with a card rather than a paragraph:',
+        `  spar card --layout chain --title "${gap.concept}" --subtitle "<one line>" --step "..."`,
       ].join('\n'),
     }
   } catch {
