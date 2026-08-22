@@ -57,6 +57,10 @@ export function readTask(sessionId: string, cwd: string, filePath?: string): Tas
   return {
     ...base,
     fromPlan: true,
+    // The step's title IS the task label. Without this every gap logged during a plan
+    // would record an empty task, because the boundary hook (which normally captures the
+    // prompt) returns early while a plan is active.
+    task: step.title,
     level: step.level,
     predicted: step.predicted ?? false,
     testWritten: step.testWritten ?? false,

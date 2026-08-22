@@ -205,8 +205,9 @@ than once per stretch of silence, and each step gets its own level from the gap 
 step that touches something the user has open gaps on will ask more of them than the one
 that adds a field.
 
-Finish a step with `spar step done`. At level 2 or 3 it refuses while no test exists, for
-the same reason the handover does.
+Finish a step with `spar step done --session <id>`. At level 2 or 3 it refuses while no test
+exists, for the same reason the handover does. It needs the session because that is where
+`spar rush` lives, and rush has to keep working here or it stops being an escape hatch.
 
 One prediction per step is the point. A whole ticket is too big to answer the third
 question about: "where will this go wrong" is answerable for "add the cancel endpoint" and

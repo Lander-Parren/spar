@@ -45,6 +45,13 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     if (state.trivial) return { type: 'allow' }
 
     const s = event.sessionId
+    /**
+     * The gate matches by working directory OR by target file, but the commands it names
+     * only look at the working directory. Start the agent one level up and it would be
+     * told to run commands that write somewhere the gate is not reading, which is a deny
+     * with no way out. Name the project explicitly whenever the two differ.
+     */
+    const where = trackedProject(event.cwd, config) ? '' : ` --cwd ${project.path}`
 
     if (state.level === undefined) {
       return {
@@ -53,9 +60,9 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
         agentMessage: [
           'spar: this task has not been gated yet. Do not retry the edit until it is.',
           '',
-          `  spar mark --session ${s} --trivial            (if this change decides nothing)`,
-          `  spar suggest-level --session ${s} --concept "<concept>"`,
-          `  spar predict --session ${s} --q1 "..." --q2 "..." --q3 "..."`,
+          `  spar mark --session ${s}${where} --trivial     (if this change decides nothing)`,
+          `  spar suggest-level --session ${s}${where} --concept "<concept>"`,
+          `  spar predict --session ${s}${where} --q1 "..." --q2 "..." --q3 "..."`,
           '',
           `Follow the spar skill. Without it: spar guide ${GUIDE.loop}`,
         ].join('\n'),
@@ -85,8 +92,8 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
           'spar is at level 3 for this task. You may write the test file, nothing else.',
           '',
           `  spar propose --session ${s} --file <path>     (record what you offer in chat)`,
-          `  spar done --session ${s}                      (when the user says they are done)`,
-          `  spar level --session ${s} <0-2>               (if this does not warrant level 3)`,
+          `  spar done --session ${s}${where}              (when the user says they are done)`,
+          `  spar level --session ${s}${where} <0-2>       (if this does not warrant level 3)`,
           '',
           `Follow the spar skill. Without it: spar guide ${GUIDE.loop}`,
         ].join('\n'),
@@ -100,7 +107,7 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
         agentMessage: [
           `spar is at level ${level} (${LEVEL_NAMES[level]}) and the user has not predicted yet.`,
           '',
-          `  spar predict --session ${s} --q1 "..." --q2 "..." --q3 "..."`,
+          `  spar predict --session ${s}${where} --q1 "..." --q2 "..." --q3 "..."`,
           '',
           `Follow the spar skill. Without it: spar guide ${GUIDE.loop}`,
         ].join('\n'),

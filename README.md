@@ -166,7 +166,7 @@ the suggestion is telling you the thresholds are wrong.
 ```sh
 spar plan --from docs/plan.md          # or --step "..." --step "..."
 spar plan                              # where am I
-spar step done
+spar step done --session <id>
 ```
 
 While a plan is active the step is the task. The gate fires once per step instead of

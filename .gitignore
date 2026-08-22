@@ -6,3 +6,6 @@ dist/
 # agent tooling scratch state — local paths, never publishable
 .omc/
 *.spar-backup
+
+# Scratch files written by audit subagents.
+test/zz-*.test.ts
