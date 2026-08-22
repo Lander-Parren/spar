@@ -173,6 +173,28 @@ check "every section a hook points at resolves"  0 "$(node -e "
 const { GUIDE, section } = require('./dist/core/guide.js');
 process.exit(Object.values(GUIDE).every((s) => section(s)) ? 0 : 1)" >/dev/null 2>&1; echo $?)"
 
+section "working through a plan"
+SPAR_ABS="$PWD/dist/cli.js"
+in_project() { ( cd "$PROJECT" && node "$SPAR_ABS" "$@" ); }
+check ".spar/ was gitignored by setup"           1     "$(grep -c '^\.spar/$' "$PROJECT/.gitignore")"
+in_project plan --title "PROJ-1" --step one --step two >/dev/null
+check "a plan can be created"                    0     $?
+in_project plan --step three >/dev/null 2>&1
+check "an unfinished plan is not replaced"       1     $?
+check "the gate fires on the active step"        deny  "$(gate "$PROJECT" "$FILE" p1)"
+$CLI level --session p1 --cwd "$PROJECT" 2 >/dev/null
+$CLI predict --session p1 --cwd "$PROJECT" --q1 a --q2 b --q3 c >/dev/null
+check "predicting opens the active step"         allow "$(gate "$PROJECT" "$FILE" p1)"
+check "and the step holds in a new session"      allow "$(gate "$PROJECT" "$FILE" p2)"
+in_project step done --session p1 >/dev/null 2>&1
+check "a level 2 step needs a test to finish"    1     $?
+gate "$PROJECT" "$PROJECT/test/orders.test.ts" p1 >/dev/null
+in_project step done --session p1 >/dev/null
+check "and finishes once a test exists"          0     $?
+check "the next step re-arms the gate"           deny  "$(gate "$PROJECT" "$FILE" p1)"
+in_project plan --clear >/dev/null
+check "clearing returns to the idle boundary"    0     $?
+
 section "the views"
 $CLI stats >/dev/null 2>&1
 check "stats renders"                            0 $?

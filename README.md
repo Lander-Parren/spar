@@ -161,6 +161,26 @@ There is no off switch, only level 0. Your own gap log suggests the level and te
 and you can always overrule it. Overrules get counted, because someone constantly correcting
 the suggestion is telling you the thresholds are wrong.
 
+## Working a ticket in steps
+
+```sh
+spar plan --from docs/plan.md          # or --step "..." --step "..."
+spar plan                              # where am I
+spar step done
+```
+
+While a plan is active the step is the task. The gate fires once per step instead of
+guessing from silence, each step gets its own level from your gap log, and your prediction
+is attached to the step rather than the session, so it is still there tomorrow.
+
+That granularity is the point. "Where will this go wrong?" is a real question about "add
+the cancel endpoint" and a guess about "implement cancellation with refunds", and a guess
+makes the calibration number stop measuring anything.
+
+spar does not plan. Your agent reads the ticket and your planner breaks it up; spar decides
+how much of each step is yours. The plan lives in `.spar/` in the project, and `spar setup`
+gitignores it.
+
 ## What each agent gets
 
 | | Claude Code | Cursor | Any MCP client | Any skills client |
