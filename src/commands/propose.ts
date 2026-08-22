@@ -16,7 +16,7 @@ export async function cmdPropose(
 ): Promise<number> {
   const content = text ?? (await readStdin())
   if (!content.trim()) {
-    process.stderr.write('spar: nothing to record — pass --text or pipe the proposal on stdin\n')
+    process.stderr.write('spar: nothing to record. Pass --text or pipe the proposal on stdin\n')
     return 1
   }
   addProposal(sessionId, {

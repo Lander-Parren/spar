@@ -73,7 +73,7 @@ export function cmdSetup(opts: {
   console.log(`config: ${paths.config()}`)
   console.log(`language: ${config.language}`)
   if (config.projects.length === 0) {
-    console.log('projects: none — spar is inert until you add one')
+    console.log('projects: none. spar is inert until you add one')
     console.log('  spar setup --project /path/to/repo --stack ".NET"')
   } else {
     console.log('projects:')

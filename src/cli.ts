@@ -24,7 +24,7 @@ import { cmdPlan } from './commands/plan.js'
 import { cmdStepDone } from './commands/step.js'
 import type { GapKind, Level } from './core/types.js'
 
-const HELP = `spar — keep learning while AI writes the code
+const HELP = `spar: keep learning while AI writes the code
 
   spar install [--agent claude-code|cursor] [--dry-run]
   spar setup --project <path> [--stack <name>] [--language <code>] [--test-command <cmd>]

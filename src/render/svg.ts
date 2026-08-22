@@ -49,7 +49,7 @@ export function calibrationChart(weeks: WeekPoint[]): string {
     `${marks}</svg>` +
     weekTable(weeks) +
     (weeks.length < 3
-      ? '<p class="note tail">Fewer than three weeks — this line does not mean anything yet.</p>'
+      ? '<p class="note tail">Fewer than three weeks, so this line does not mean anything yet.</p>'
       : '')
   )
 }

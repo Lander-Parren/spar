@@ -48,7 +48,7 @@ export function cmdLog(args: LogArgs): number {
   }
 
   appendGap(gap)
-  console.log(`logged ${gap.id} — ${gap.concept}`)
+  console.log(`logged ${gap.id}: ${gap.concept}`)
   return 0
 }
 

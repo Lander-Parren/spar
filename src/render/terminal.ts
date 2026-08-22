@@ -10,7 +10,7 @@ export function renderStats(stats: Stats): string {
     return 'spar: nothing recorded yet. Predict on a task or two and come back.'
   }
 
-  out.push('CALIBRATION — share of predictions that held, by week')
+  out.push('CALIBRATION: share of predictions that held, by week')
   if (calibration.length === 0) {
     out.push('  no predictions recorded yet')
   } else {
@@ -22,11 +22,11 @@ export function renderStats(stats: Stats): string {
       )
     }
     if (calibration.length < 3) {
-      out.push('  (too few weeks to read a trend — this needs a month before it says anything)')
+      out.push('  (too few weeks to read a trend. It needs a month before it says anything)')
     }
   }
 
-  out.push('', 'CURRICULUM — concepts by weakness. The top row is what to learn next.')
+  out.push('', 'CURRICULUM: concepts by weakness. The top row is what to learn next.')
   if (concepts.length === 0) {
     out.push('  no gaps logged yet')
   } else {
@@ -47,7 +47,7 @@ export function renderStats(stats: Stats): string {
 
   out.push(
     '',
-    'TOOL HEALTH — is the design still right, not whether you are disciplined',
+    'TOOL HEALTH: is the design still right, not whether you are disciplined',
     `  rush         ${pct(health.rushRatio).padStart(4)}  ${health.rushRatio > 0.5 ? '<- over half: the friction is set too high, lower it' : ''}`,
     `  overrides    ${pct(health.overrideRatio).padStart(4)}  ${health.overrideRatio > 0.4 ? '<- the thresholds disagree with you; change them' : ''}`,
     `  trivial      ${pct(health.trivialRatio).padStart(4)}  ${health.trivialRatio > 0.7 ? '<- almost everything waved through; check the criteria' : ''}`,

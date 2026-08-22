@@ -62,7 +62,7 @@ function curriculum(concepts: ConceptRow[]): string {
 function health(stats: Stats): string {
   const { health: h, noIdea: n, totals: t, due: d } = stats
   const cards: { value: string; label: string; warn?: string }[] = [
-    { value: p(h.rushRatio), label: 'rush', ...(h.rushRatio > 0.5 ? { warn: 'Over half. The friction is set too high — lower it.' } : {}) },
+    { value: p(h.rushRatio), label: 'rush', ...(h.rushRatio > 0.5 ? { warn: 'Over half. The friction is set too high. Lower it.' } : {}) },
     { value: p(h.overrideRatio), label: 'overrides', ...(h.overrideRatio > 0.4 ? { warn: 'The thresholds disagree with you. Change them.' } : {}) },
     { value: p(h.trivialRatio), label: 'waved through', ...(h.trivialRatio > 0.7 ? { warn: 'Almost everything. Check the triviality criteria.' } : {}) },
     { value: p(n.ratio), label: '"no idea"', ...(n.ratio > 0.6 ? { warn: 'The material is above you. Learn the concept before gating on it.' } : {}) },

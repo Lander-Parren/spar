@@ -4,7 +4,7 @@ The gate exists to catch decisions, not keystrokes. Gating trivia teaches nothin
 trains the user to switch the tool off, so this judgement matters.
 
 **When unsure, treat it as non-trivial.** A wasted 5 minutes costs less than a missed
-gap — but see the honesty rule: do not use uncertainty as an excuse to gate everything
+gap, but see the honesty rule: do not use uncertainty as an excuse to gate everything
 either, or the ratio will show it.
 
 ## Trivial

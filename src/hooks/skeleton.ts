@@ -66,7 +66,7 @@ export function skeleton(event: NormalizedEvent): NormalizedDecision {
         'replace the lines that carry the actual decision with a marker naming precisely what',
         'the user has to decide, for example:',
         '',
-        `  // ${MARKER} choose the transaction boundary — who opens it, and what happens on failure)`,
+        `  // ${MARKER} choose the transaction boundary: who opens it, and what happens on failure)`,
         '',
         'Signatures, imports, wiring and error plumbing are yours. The 5-10 lines where the',
         'design could reasonably have gone another way are theirs.',

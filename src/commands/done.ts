@@ -20,7 +20,7 @@ export function cmdDone(sessionId: string, cwd: string = process.cwd()): number 
   const level = state.level ?? 1
 
   if (level < 2) {
-    console.log(`spar: level ${level} (${LEVEL_NAMES[level]}) has no closing review — nothing to do.`)
+    console.log(`spar: level ${level} (${LEVEL_NAMES[level]}) has no closing review. Nothing to do.`)
     return 0
   }
 
@@ -47,7 +47,7 @@ export function cmdDone(sessionId: string, cwd: string = process.cwd()): number 
     const name = displayPath(proposal.file, config)
 
     if (current === undefined) {
-      console.log(`## ${name}\n  not on disk — the user has not written this one yet.\n`)
+      console.log(`## ${name}\n  not on disk. The user has not written this one yet.\n`)
       continue
     }
 
@@ -58,7 +58,7 @@ export function cmdDone(sessionId: string, cwd: string = process.cwd()): number 
       console.log(
         `## ${name}\n  identical to what was proposed.` +
           (level === 3
-            ? '\n  Worth asking why they placed it where they did — a clean copy tells you nothing yet.\n'
+            ? '\n  Worth asking why they placed it where they did. A clean copy tells you nothing yet.\n'
             : '\n'),
       )
       continue
@@ -67,7 +67,7 @@ export function cmdDone(sessionId: string, cwd: string = process.cwd()): number 
     anyDiff = true
     console.log(`## ${name}   (- proposed, + written)`)
     console.log(renderDiff(lines))
-    if (leftover) console.log(`\n  NOTE: ${MARKER} markers are still in this file — unfinished, not a gap.`)
+    if (leftover) console.log(`\n  NOTE: ${MARKER} markers are still in this file. Unfinished, not a gap.`)
     console.log()
   }
 

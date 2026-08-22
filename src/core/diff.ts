@@ -22,7 +22,7 @@ export function diffLines(before: string, after: string): DiffLine[] {
   if (a.length > MAX_LINES || b.length > MAX_LINES) {
     return [
       { op: 'remove', text: `<${a.length} lines proposed>` },
-      { op: 'add', text: `<${b.length} lines written — too large to diff inline>` },
+      { op: 'add', text: `<${b.length} lines written, too large to diff inline>` },
     ]
   }
 

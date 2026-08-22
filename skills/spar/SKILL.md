@@ -1,6 +1,6 @@
 ---
 name: spar
-description: Make the user predict before you implement, then show them where their model was wrong and log the gap. Use whenever you are about to write or edit source code in a project the user is learning — adding an endpoint, service, data model, migration, background job, or wiring up a dependency. Also use when the user says "spar", asks to be quizzed before you code, mentions predicting before implementing, wants to stop passively accepting AI output, or says they are not learning anything from a codebase.
+description: Make the user predict before you implement, then show them where their model was wrong and log the gap. Use whenever you are about to write or edit source code in a project the user is learning, such as adding an endpoint, service, data model, migration, background job, or wiring up a dependency. Also use when the user says "spar", asks to be quizzed before you code, mentions predicting before implementing, wants to stop passively accepting AI output, or says they are not learning anything from a codebase.
 license: MIT
 compatibility: Works on its own. The optional `spar` CLI (npm i -g spar-agent) adds levels, spaced repetition, stats and a dashboard; its MCP server exposes the same as tools. Enforcement needs hooks, available in Claude Code and Cursor.
 allowed-tools: Bash(spar:*) Read
@@ -11,7 +11,7 @@ metadata:
 
 # spar
 
-Reviewing finished, convincing code teaches almost nothing — there is no position to
+Reviewing finished, convincing code teaches almost nothing, because there is no position to
 judge it from. This skill inverts the order: **the user takes a position, then you
 implement, then you compare.** Even a wrong prediction works; being wrong is the hook
 memory hangs on.
@@ -27,17 +27,17 @@ wiring or lifetimes, data model or query shape, concurrency, error handling, or
 anything crossing a layer boundary. See `references/triviality.md` when unsure.
 
 If it is trivial and the CLI is present, run `spar mark --session <id> --trivial`
-and carry on. Do not silently skip the judgement — it is recorded either way, so that
+and carry on. Do not silently skip the judgement. It is recorded either way, so that
 the ratio of "trivial" calls stays visible.
 
 ## The loop
 
-**1. Name the concepts.** Say what this change actually touches, in 1–3 general terms
+**1. Name the concepts.** Say what this change actually touches, in one to three general terms
 that would be recognisable outside this codebase: "transaction boundaries in an ORM",
 not "the OrdersController fix".
 
 **2. Get a level.** `spar suggest-level --session <id> --concept "<concept>"`.
-Report it to the user *with its reason* — the reason is the point. They may override
+Report it to the user *with its reason*. The reason is the point. They may override
 with `spar level --session <id> <0-3>`. Without the CLI, use level 1.
 
 **3. Ask the three questions.** Ask all three in one message, in the user's language,
@@ -59,7 +59,7 @@ Record with `spar predict --session <id> --q1 "..." --q2 "..." --q3 "..."`.
 |---|---|
 | 0 rush | Implement normally. Afterwards, ask one 30-second question about a real decision point you hit. |
 | 1 standard | Implement normally, then do step 5. |
-| 2 skeleton | Write signatures, imports, wiring, **and a test that fails**. Leave every line that carries the decision as `TODO(spar: <precise instruction>)`. The user writes those 5–10 lines. Then stop and wait. |
+| 2 skeleton | Write signatures, imports, wiring, **and a test that fails**. Leave every line that carries the decision as `TODO(spar: <precise instruction>)`. The user writes those five to ten lines. Then stop and wait. |
 | 3 transcript | **Write the test file and nothing else.** Deliver the implementation in chat with enough explanation to place it: which file, where in it, why there. Record it, then stop and wait. |
 
 **At levels 2 and 3, always leave a failing test behind.** A marker with no test hands the
@@ -71,7 +71,7 @@ Make it fail first. A test that already passes against an empty stub pins no beh
 spar refuses the handover in both cases: no test at all, and a test that is already green.
 
 At level 2 the skeleton is recorded for you when you write it. A post-write check
-verifies you actually left a marker somewhere in the task — if it complains, you left
+verifies you actually left a marker somewhere in the task. If it complains, you left
 the user nothing to decide, so go back and hand over the decision, not the typing.
 
 At level 3, record what you offered *before* the user starts writing:
@@ -88,13 +88,13 @@ worthless.
 When the user says they are done, run `spar done --session <id>`. It prints the actual
 diff between what was proposed and what is on disk.
 
-**5. Show the difference.** Not a verdict — a comparison. At levels 2 and 3 work from
+**5. Show the difference.** Not a verdict, a comparison. At levels 2 and 3 work from
 the diff `spar done` prints; at level 1 compare against the prediction directly:
 
 - Where their prediction held. Say so explicitly; calibration runs both ways.
 - Where it diverged, **and why**. Give the reason the code has to be this way, not a
   correction. "The unit-of-work owns the transaction because the repository can be
-  composed into a larger operation" — not "you were wrong about the repository."
+  composed into a larger operation", not "you were wrong about the repository."
 - Whether their approach would also have worked. It often would. Say so when it is
   true; it is half of getting their confidence back.
 
@@ -151,11 +151,11 @@ At session start you may be handed one gap that has come due. Two rules:
 
 **Wait for a natural pause.** A quiz fired mid-debugging teaches nothing and gets the
 tool switched off. A task finishing, a related file coming up, the user asking
-something adjacent — those are the moments.
+something adjacent. Those are the moments.
 
 **Ask before you show.** Have them explain the concept in their own words first. Then
 judge honestly and record `spar review --session <id> <gap-id> --ok` or `--nok`.
-Marking a shaky answer correct promotes the gap out of the rotation and hides it —
+Marking a shaky answer correct promotes the gap out of the rotation and hides it,
 and a hidden gap looks exactly like a learned one, which is the one failure this
 system cannot detect on its own. Getting it wrong is not a setback; it is the
 mechanism.
@@ -164,7 +164,7 @@ mechanism.
 
 Log the **concept and the shape of the misunderstanding, never the business logic.**
 No client names, no domain rules, no proprietary code. In a month what they need is
-the idea, not the fragment — and this is what keeps the log safe to show a colleague.
+the idea, not the fragment, and this is what keeps the log safe to show a colleague.
 
 **State the belief itself, with no framing words.** Views prefix these with "thought"
 and "actually", so `--model "thought the repository..."` reads as "thought thought
@@ -222,7 +222,7 @@ directory the gate matched on. If you must run them from elsewhere, pass `--cwd 
 ## Honesty rules
 
 - Never ask the questions and then answer them in the same message.
-- Never soften the diff into "you were basically right" when they were not — a false
+- Never soften the diff into "you were basically right" when they were not. A false
   positive on calibration is worse than a gap.
 - Never mark something trivial just to avoid the friction. If you are unsure, it is
   not trivial.

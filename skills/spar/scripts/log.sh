@@ -1,5 +1,5 @@
 #!/bin/sh
-# spar — append one gap to ~/.spar/gaps.jsonl without the CLI installed.
+# spar: append one gap to ~/.spar/gaps.jsonl without the CLI installed.
 #
 # This is the tier-1 fallback: it is what makes the skill worth installing on its own,
 # in any agent, with nothing but a shell. It only ever appends. Levels, spaced
@@ -65,4 +65,4 @@ esc() { printf '%s' "$1" | eval "$ESC"; }
   printf '"box":1,"due":%s,"hits":0,"misses":0}\n' "$(esc "$DUE")"
 } >> "$GAPS"
 
-printf 'logged %s — %s\n' "$ID" "$CONCEPT"
+printf 'logged %s: %s\n' "$ID" "$CONCEPT"

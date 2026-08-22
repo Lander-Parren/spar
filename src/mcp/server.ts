@@ -81,7 +81,7 @@ export async function runMcpServer(): Promise<number> {
         misses: 0,
       }
       appendGap(gap)
-      return text(`logged ${gap.id} — ${gap.concept}. It comes back tomorrow.`)
+      return text(`logged ${gap.id}: ${gap.concept}. It comes back tomorrow.`)
     },
   )
 
@@ -119,7 +119,7 @@ export async function runMcpServer(): Promise<number> {
       description: 'Correct moves it up a box (1, 3, 7, 16, 35 days); wrong sends it back to box 1.',
       inputSchema: {
         gap_id: z.string(),
-        correct: z.boolean().describe('Judge honestly — a generous yes removes the gap from rotation'),
+        correct: z.boolean().describe('Judge honestly. A generous yes removes the gap from rotation'),
       },
     },
     async ({ gap_id, correct }) => {
@@ -131,7 +131,7 @@ export async function runMcpServer(): Promise<number> {
       return text(
         correct
           ? `${gap_id}: box ${gap.box} -> ${next.box}, back on ${next.due}`
-          : `${gap_id}: back to box 1, returns ${next.due}. Not a setback — it is the point.`,
+          : `${gap_id}: back to box 1, returns ${next.due}. Not a setback. It is the point.`,
       )
     },
   )
@@ -148,7 +148,7 @@ export async function runMcpServer(): Promise<number> {
     },
     async ({ concepts }) => {
       const s = suggestLevel({ concepts, gaps: readGaps(), focused: readFocus() })
-      return text(`level ${s.level} — ${s.reason}`)
+      return text(`level ${s.level}: ${s.reason}`)
     },
   )
 

@@ -20,7 +20,7 @@ export function cmdSuggestLevel(
     rush: state.rush,
   })
   console.log(
-    `level ${suggestion.level} (${LEVEL_NAMES[suggestion.level]}) — ${suggestion.reason}`,
+    `level ${suggestion.level} (${LEVEL_NAMES[suggestion.level]}): ${suggestion.reason}`,
   )
   // Recorded, not committed: the user still gets to override before predicting.
   // With a plan this lands on the active step, which is what gives each step its own
@@ -69,7 +69,7 @@ export function cmdPredict(
   })
   console.log(
     blanks === 3
-      ? 'prediction recorded (all three blank — that is data, not failure)'
+      ? 'prediction recorded (all three blank, which is data, not failure)'
       : `prediction recorded${blanks ? ` (${blanks} blank)` : ''}`,
   )
   return 0
@@ -102,6 +102,6 @@ function normalizeAnswer(answer: string | undefined): string {
 export function cmdNext(sessionId: string, cwd: string = process.cwd()): number {
   clearProposals(sessionId)
   resetTaskState(sessionId, cwd)
-  console.log('new task — the gate will ask again on the next write')
+  console.log('new task. The gate will ask again on the next write')
   return 0
 }

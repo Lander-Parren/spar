@@ -17,7 +17,7 @@ export function cmdReview(sessionId: string, gapId: string, correct: boolean): n
   console.log(
     correct
       ? `${gapId}: box ${gap.box} -> ${next.box}${next.box === MAX_BOX ? ' (consolidated)' : ''}, back on ${next.due} (${INTERVALS[next.box - 1]}d)`
-      : `${gapId}: back to box 1, returns ${next.due}. Not a setback — it is the point.`,
+      : `${gapId}: back to box 1, returns ${next.due}. Not a setback. It is the point.`,
   )
   return 0
 }

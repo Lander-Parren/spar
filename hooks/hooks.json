@@ -1,5 +1,5 @@
 {
-  "description": "spar — predict before you're told. Inert until `spar setup --project <path>` names a project.",
+  "description": "spar: predict before you're told. Inert until `spar setup --project <path>` names a project.",
   "hooks": {
     "PreToolUse": [
       {

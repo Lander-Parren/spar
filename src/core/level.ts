@@ -47,7 +47,7 @@ export function suggestLevel(input: LevelInput): LevelSuggestion {
 
   if (open.length >= 3) {
     base = 3
-    reason = `${open.length} open gaps on ${quote(open)} — write this one yourself`
+    reason = `${open.length} open gaps on ${quote(open)}, so write this one yourself`
   } else if (everBlank) {
     base = 3
     reason = `you answered "no idea" here before (${quote(related)})`
