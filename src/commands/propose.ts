@@ -12,6 +12,7 @@ export async function cmdPropose(
   sessionId: string,
   filePath: string,
   text: string | undefined,
+  cwd: string = process.cwd(),
 ): Promise<number> {
   const content = text ?? (await readStdin())
   if (!content.trim()) {
@@ -19,7 +20,7 @@ export async function cmdPropose(
     return 1
   }
   addProposal(sessionId, {
-    file: resolve(filePath),
+    file: resolve(cwd, filePath),
     content,
     source: 'chat',
     ts: new Date().toISOString(),

@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Level } from './types.js'
 
@@ -21,6 +21,7 @@ export interface PlanStep {
   predictedAt?: string
   editsSincePrediction?: number
   handoverBlocked?: boolean
+  suiteCheckedAtEdits?: number
 }
 
 export interface Plan {
@@ -49,9 +50,18 @@ export function readPlan(root: string): Plan | undefined {
   }
 }
 
+/**
+ * Write to a temporary file and rename over the target, the way store.ts updates a gap.
+ * Rename is atomic on POSIX, so a crash mid-write leaves the previous plan rather than a
+ * truncated one. The gate writes here on every edit it lets through, so "mid-write" is
+ * not a rare moment.
+ */
 export function writePlan(root: string, plan: Plan): void {
   mkdirSync(join(root, '.spar'), { recursive: true })
-  writeFileSync(planPath(root), JSON.stringify(plan, null, 2) + '\n', 'utf8')
+  const target = planPath(root)
+  const temp = `${target}.tmp`
+  writeFileSync(temp, JSON.stringify(plan, null, 2) + '\n', 'utf8')
+  renameSync(temp, target)
 }
 
 export function clearPlan(root: string): void {

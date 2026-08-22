@@ -87,6 +87,14 @@ export interface SessionState {
   testWritten: boolean
   /** Handover already objected once this task. It never objects twice, so it cannot loop. */
   handoverBlocked?: boolean
+  /**
+   * The edit count at which the project's suite was last run and found red.
+   *
+   * A red suite is the CORRECT state through all of level 2 and 3, so without this the
+   * check re-runs someone's whole test suite on every single turn. Nothing can have
+   * changed while the edit count has not moved.
+   */
+  suiteCheckedAtEdits?: number
 }
 
 export function emptyState(sessionId: string): SessionState {

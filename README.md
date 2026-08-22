@@ -164,7 +164,8 @@ the suggestion is telling you the thresholds are wrong.
 ## Working a ticket in steps
 
 ```sh
-spar plan --from docs/plan.md          # or --step "..." --step "..."
+spar plan --from docs/plan.md          # reads ## Task / ### Task headings
+spar plan --step "..." --step "..."    # or name the steps yourself
 spar plan                              # where am I
 spar step done --session <id>
 ```
@@ -178,8 +179,8 @@ the cancel endpoint" and a guess about "implement cancellation with refunds", an
 makes the calibration number stop measuring anything.
 
 spar does not plan. Your agent reads the ticket and your planner breaks it up; spar decides
-how much of each step is yours. The plan lives in `.spar/` in the project, and `spar setup`
-gitignores it.
+how much of each step is yours. The plan lives in `.spar/` in the project, and spar adds it
+to your `.gitignore` the moment it creates it.
 
 ## What each agent gets
 

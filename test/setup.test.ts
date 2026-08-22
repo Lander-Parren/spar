@@ -54,7 +54,9 @@ describe('setup and .gitignore', () => {
     expect(ignore().match(/\.spar/g)).toHaveLength(1)
   })
 
-  it('does not fail setup when the gitignore cannot be written', () => {
-    expect(cmdSetup({ project: join(project, 'does', 'not', 'exist') })).toBe(0)
+  it('refuses a path that is not a directory, instead of saving a dead config', () => {
+    // A project that matches nothing is indistinguishable from the inert guarantee
+    // working as designed, so a typo here would produce a silently dead install.
+    expect(cmdSetup({ project: join(project, 'does', 'not', 'exist') })).toBe(1)
   })
 })

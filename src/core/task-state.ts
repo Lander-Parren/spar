@@ -23,6 +23,7 @@ const TASK_FIELDS = [
   'predictedAt',
   'editsSincePrediction',
   'handoverBlocked',
+  'suiteCheckedAtEdits',
 ] as const satisfies readonly (keyof TaskPatch)[]
 
 /** Clear the task-scoped fields. `rush` survives: it is session-scoped. */
@@ -36,6 +37,7 @@ export const RESET: TaskPatch = {
   taskPrompt: undefined,
   testWritten: false,
   handoverBlocked: false,
+  suiteCheckedAtEdits: undefined,
 }
 
 /**
@@ -68,6 +70,7 @@ export function readTask(sessionId: string, cwd: string, filePath?: string): Tas
     predictedAt: step.predictedAt,
     editsSincePrediction: step.editsSincePrediction ?? 0,
     handoverBlocked: step.handoverBlocked,
+    suiteCheckedAtEdits: step.suiteCheckedAtEdits,
   }
 }
 

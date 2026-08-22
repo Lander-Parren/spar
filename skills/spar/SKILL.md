@@ -200,6 +200,9 @@ spar plan --title "<ticket>" --step "..." --step "..."
 spar plan --from <the plan file you already wrote>
 ```
 
+`--from` reads `## Task` and `### Task` headings, which is what the usual planners emit.
+For any other format, name the steps with `--step`.
+
 While a plan is active the step is the task, so the questions come once per step rather
 than once per stretch of silence, and each step gets its own level from the gap log. The
 step that touches something the user has open gaps on will ask more of them than the one

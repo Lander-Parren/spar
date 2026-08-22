@@ -26,7 +26,18 @@ export function handover(event: NormalizedEvent): NormalizedDecision {
     if (state.level !== 2 && state.level !== 3) return { type: 'noop' }
     if (state.handoverBlocked) return { type: 'noop' }
     if (state.testWritten) {
-      if (!project.testCommand || suiteIsRed(project.testCommand, project.path)) {
+      if (!project.testCommand) return { type: 'noop' }
+      // Red is the right answer for the whole of level 2 and 3, so this runs on every
+      // turn until the user is done. Nothing can have changed while the edit count has
+      // not moved, and running someone's suite again to learn that is rude.
+      if (state.suiteCheckedAtEdits === state.editsSincePrediction) return { type: 'noop' }
+      if (suiteIsRed(project.testCommand, project.path)) {
+        writeTask(
+          event.sessionId,
+          event.cwd,
+          { suiteCheckedAtEdits: state.editsSincePrediction },
+          event.filePath,
+        )
         return { type: 'noop' }
       }
       writeTask(event.sessionId, event.cwd, { handoverBlocked: true }, event.filePath)
@@ -67,7 +78,10 @@ export function handover(event: NormalizedEvent): NormalizedDecision {
  */
 function suiteIsRed(command: string, cwd: string): boolean {
   try {
-    const result = spawnSync(command, { cwd, shell: true, timeout: 45_000, stdio: 'ignore' })
+    const result = spawnSync(command, { cwd, shell: true, timeout: 45_000,
+      // Without a signal the timeout can be ignored by a suite that traps SIGTERM,
+      // and the 60 second hook budget would run out instead.
+      killSignal: 'SIGKILL', stdio: 'ignore' })
     if (result.error || result.status === null) return true
     return result.status !== 0
   } catch {

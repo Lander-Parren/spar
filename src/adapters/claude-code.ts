@@ -6,6 +6,10 @@ import { SILENT, obj, str, type Adapter, type EventKind, type NormalizedDecision
  * Input arrives as JSON on stdin with session_id / cwd / tool_name / tool_input.
  * Decisions go back on stdout under `hookSpecificOutput`; exit 2 feeds stderr to
  * the agent as a blocking error.
+ *
+ * Two output channels, and they are not interchangeable. `permissionDecisionReason`
+ * is what the AGENT is told when a call is denied; `systemMessage` is a warning shown
+ * to the PERSON. Everything spar needs the agent to do next lives in the first one.
  */
 export const claudeCode: Adapter = {
   name: 'claude-code',
@@ -37,8 +41,14 @@ export const claudeCode: Adapter = {
       case 'deny':
         return {
           stdout: JSON.stringify({
-            hookSpecificOutput: { hookEventName: hookEventName(kind), permissionDecision: 'deny' },
-            systemMessage: decision.agentMessage,
+            hookSpecificOutput: {
+              hookEventName: hookEventName(kind),
+              permissionDecision: 'deny',
+              // The agent's copy. Without this the gate is a wall with no door: the
+              // write is refused and the agent is never told which command opens it.
+              permissionDecisionReason: decision.agentMessage,
+            },
+            systemMessage: decision.userMessage ?? decision.agentMessage,
           }),
           stderr: '',
           exitCode: 0,

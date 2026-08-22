@@ -1,10 +1,18 @@
 {
   "name": "spar",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "Keep learning while AI writes the code. Predict before you are told, then turn every gap between your model and reality into a curriculum.",
-  "author": { "name": "Lander Parren" },
+  "author": {
+    "name": "Lander Parren"
+  },
   "homepage": "https://github.com/Lander-Parren/spar",
   "repository": "https://github.com/Lander-Parren/spar",
   "license": "MIT",
-  "keywords": ["learning", "deliberate-practice", "code-review", "hooks", "spaced-repetition"]
+  "keywords": [
+    "learning",
+    "deliberate-practice",
+    "code-review",
+    "hooks",
+    "spaced-repetition"
+  ]
 }

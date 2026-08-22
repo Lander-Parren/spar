@@ -23,12 +23,21 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     const config = loadConfig()
 
     let targets: string[] = []
+    /**
+     * The file this event is really about. A write tool names it in `file_path`; a shell
+     * command hides it inside the command string. Everything downstream needs it, because
+     * matching on the working directory alone lets an agent one level up write into a
+     * tracked project completely ungated.
+     */
+    let subject: string | undefined = event.filePath
     if (event.toolName && SHELL_TOOLS.test(event.toolName)) {
       // A shell command is a write only if it actually writes somewhere tracked. This
       // is where most writes really happen: an agent reaches for `cat > f <<EOF` far
       // more often than for a write tool, and some setups tell it to.
       targets = writeTargets(event.command ?? '', event.cwd)
-      if (!targets.some((path) => trackedProject(path, config))) return { type: 'allow' }
+      const tracked = targets.find((path) => trackedProject(path, config))
+      if (!tracked) return { type: 'allow' }
+      subject = tracked
     } else if (event.toolName && !WRITE_TOOLS.test(event.toolName)) {
       return { type: 'allow' }
     } else if (event.filePath) {
@@ -36,11 +45,11 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     }
     // By working directory or by target file: starting the agent a level up must not
     // quietly switch the gate off.
-    const project = trackedFor(event.cwd, event.filePath, config)
+    const project = trackedFor(event.cwd, subject, config)
     // Neither is tracked: the inert guarantee. A fresh install does nothing.
     if (!project) return { type: 'allow' }
 
-    let state = readTask(event.sessionId, event.cwd, event.filePath)
+    let state = readTask(event.sessionId, event.cwd, subject)
     if (state.rush) return { type: 'allow' }
     if (state.trivial) return { type: 'allow' }
 
@@ -77,7 +86,7 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     if (targets.length > 0 && targets.every(isTestPath)) {
       if (!state.testWritten) {
         state = { ...state, testWritten: true }
-        writeTask(event.sessionId, event.cwd, { testWritten: true }, event.filePath)
+        writeTask(event.sessionId, event.cwd, { testWritten: true }, subject)
       }
       // At level 3 the agent writes the test and nothing else. The test is the brief;
       // the implementation is the user's.
@@ -123,7 +132,7 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
         predictedAt: new Date().toISOString(),
         editsSincePrediction: state.editsSincePrediction + 1,
       },
-      event.filePath,
+      subject,
     )
     return { type: 'allow' }
   } catch {

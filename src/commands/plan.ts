@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { loadConfig, trackedProject } from '../core/config.js'
+import { ignoreSparDir } from './setup.js'
 import {
   activeStep,
   clearPlan,
@@ -44,7 +46,8 @@ export function cmdPlan(args: PlanArgs): number {
   if (args.from) {
     let markdown: string
     try {
-      markdown = readFileSync(args.from, 'utf8')
+      // Relative to the project this command is about, not to wherever the shell is.
+      markdown = readFileSync(resolve(cwd, args.from), 'utf8')
     } catch {
       process.stderr.write(`spar: cannot read ${args.from}\n`)
       return 1
@@ -72,6 +75,8 @@ export function cmdPlan(args: PlanArgs): number {
   }
   if (unfinished) console.log(`replacing a plan of ${existing.steps.length} steps`)
 
+  // Before the directory exists, not after somebody has already committed it.
+  ignoreSparDir(root)
   writePlan(root, makePlan(args.title ?? 'untitled', titles))
   console.log(`plan: ${titles.length} steps, starting with "${titles[0]}"`)
   return 0

@@ -67,15 +67,34 @@ export function trackedFor(
  * Returns the matching project (deepest match wins, for nested repos) or undefined.
  */
 export function trackedProject(cwd: string, config: Config): ProjectConfig | undefined {
-  const here = real(cwd)
+  // Both spellings of the path being asked about, against both spellings of each project
+  // root. Resolving symlinks alone was not enough: a symlinked directory INSIDE a tracked
+  // project resolves to somewhere outside it, which would have hidden the write from the
+  // gate. For a gate, the safe direction is to match more, never less.
+  const heres = spellings(cwd)
   let best: ProjectConfig | undefined
+  let bestLength = -1
   for (const project of config.projects) {
-    const root = real(project.path)
-    if (here === root || here.startsWith(root.endsWith(sep) ? root : root + sep)) {
-      if (!best || root.length > real(best.path).length) best = project
+    for (const root of spellings(project.path)) {
+      if (heres.some((here) => within(here, root)) && root.length > bestLength) {
+        best = project
+        bestLength = root.length
+      }
     }
   }
   return best
+}
+
+/** A path as written and a path with its symlinks resolved, deduplicated. */
+function spellings(path: string): string[] {
+  const lexical = resolve(path)
+  const physical = real(path)
+  return lexical === physical ? [lexical] : [lexical, physical]
+}
+
+/** Segment-wise containment, so /work/api never matches /work/api-legacy. */
+function within(here: string, root: string): boolean {
+  return here === root || here.startsWith(root.endsWith(sep) ? root : root + sep)
 }
 
 /**

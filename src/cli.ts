@@ -138,7 +138,12 @@ async function main(): Promise<number> {
     case 'focus':
       return cmdFocus(flags.positional, flags.bool('clear'))
     case 'propose':
-      return cmdPropose(requireSession(flags), required(flags.string('file'), '--file'), flags.string('text'))
+      return cmdPropose(
+        requireSession(flags),
+        required(flags.string('file'), '--file'),
+        flags.string('text'),
+        cwdOf(flags),
+      )
     case 'done':
       return cmdDone(requireSession(flags), cwdOf(flags))
     case 'next':
@@ -256,6 +261,13 @@ function parseQuestion(value: string | undefined): 1 | 2 | 3 | undefined {
 
 main().then(
   (code) => process.exit(code),
-  // Even a crash in the CLI itself must not become a blocked edit.
-  () => process.exit(0),
+  (error: unknown) => {
+    // A crash inside a hook must never become a blocked edit, so those still exit 0 and
+    // stay silent. Everything else is a command somebody is watching: swallowing the
+    // error there reported success for work that never happened.
+    const invoked = process.argv[2]
+    if (invoked === 'hook' || invoked === 'mcp') process.exit(0)
+    process.stderr.write(`spar: ${error instanceof Error ? error.message : String(error)}\n`)
+    process.exit(1)
+  },
 )
