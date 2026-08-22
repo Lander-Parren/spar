@@ -119,6 +119,26 @@ check "level 3 refuses every write"              deny  "$(gate "$PROJECT" "$FILE
 $CLI rush --session s4 >/dev/null
 check "rush degrades instead of blocking"        allow "$(gate "$PROJECT" "$FILE" s4)"
 
+section "handing work back"
+handover() { printf '{"session_id":"%s","cwd":"%s"}' "$1" "$PROJECT" \
+  | $CLI hook handover --agent claude-code 2>/dev/null \
+  | python3 -c 'import json,sys; d=sys.stdin.read().strip(); print(json.loads(d).get("decision","?") if d else "allow")'; }
+$CLI level --session s6 2 >/dev/null
+$CLI predict --session s6 --q1 a --q2 b --q3 c >/dev/null
+printf '{"session_id":"s6","cwd":"%s","tool_name":"Write","tool_input":{"file_path":"%s/src/orders/new.ts"}}' \
+  "$PROJECT" "$PROJECT" | $CLI hook gate --agent claude-code >/dev/null
+check "refuses a handover with no test"          block "$(handover s6)"
+check "and never refuses the same task twice"    allow "$(handover s6)"
+$CLI level --session s7 2 >/dev/null
+$CLI predict --session s7 --q1 a --q2 b --q3 c >/dev/null
+printf '{"session_id":"s7","cwd":"%s","tool_name":"Write","tool_input":{"file_path":"%s/test/new.test.ts"}}' \
+  "$PROJECT" "$PROJECT" | $CLI hook gate --agent claude-code >/dev/null
+check "accepts one once a test exists"           allow "$(handover s7)"
+$CLI level --session s8 3 >/dev/null
+$CLI predict --session s8 --q1 a --q2 b --q3 c >/dev/null
+check "level 3 still lets the test through"      allow "$(gate "$PROJECT" "$PROJECT/test/x.test.ts" s8)"
+check "level 3 still refuses the source"         deny  "$(gate "$PROJECT" "$PROJECT/src/x.ts" s8)"
+
 section "the log and the return"
 for i in 1 2 3; do
   $CLI log --session s1 --concept "transaction boundaries in an ORM" \

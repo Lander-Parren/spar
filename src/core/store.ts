@@ -91,6 +91,8 @@ export function resetTask(state: SessionState): SessionState {
     predictedAt: undefined,
     editsSincePrediction: 0,
     taskPrompt: undefined,
+    testWritten: false,
+    handoverBlocked: false,
   }
 }
 

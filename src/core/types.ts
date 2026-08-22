@@ -39,6 +39,12 @@ export interface ProjectConfig {
   path: string
   /** Free-form hint used when naming concepts, e.g. ".NET", "Kotlin". */
   stack?: string
+  /**
+   * Optional. When set, handover runs it and expects a red suite: a test that already
+   * passes against an empty stub pins nothing. Off by default, because running someone
+   * else's suite automatically is invasive and can be slow.
+   */
+  testCommand?: string
 }
 
 export interface Config {
@@ -77,8 +83,15 @@ export interface SessionState {
   editsSincePrediction: number
   /** The prompt that opened the current task, for comparison against the next one. */
   taskPrompt?: string
+  /** A test file was written during this task. Checked when the agent hands back. */
+  testWritten: boolean
+  /** Handover already objected once this task. It never objects twice, so it cannot loop. */
+  handoverBlocked?: boolean
 }
 
 export function emptyState(sessionId: string): SessionState {
-  return { sessionId, predicted: false, rush: false, trivial: false, editsSincePrediction: 0 }
+  return {
+    sessionId, predicted: false, rush: false, trivial: false,
+    editsSincePrediction: 0, testWritten: false,
+  }
 }

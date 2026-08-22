@@ -9,7 +9,7 @@ import type { EventKind } from '../adapters/types.js'
  * Claude Code but is silent in Cursor" bug into a failing test.
  */
 export interface HookSpec {
-  hook: 'gate' | 'skeleton' | 'boundary' | 'due'
+  hook: 'gate' | 'skeleton' | 'boundary' | 'due' | 'handover'
   kind: EventKind
   /** Which tools the hook applies to. Cursor takes it as a filter, Claude Code as a matcher. */
   matcher: string
@@ -23,6 +23,8 @@ export const HOOKS: HookSpec[] = [
   { hook: 'skeleton', kind: 'post-tool', matcher: 'Write|Edit|MultiEdit', timeout: 5 },
   { hook: 'boundary', kind: 'prompt', matcher: '*', timeout: 5 },
   { hook: 'due', kind: 'session-start', matcher: '*', timeout: 10 },
+  // Longer, because handover may run the project's suite when testCommand is set.
+  { hook: 'handover', kind: 'stop', matcher: '*', timeout: 60 },
 ]
 
 export const AGENTS = ['claude-code', 'cursor'] as const
@@ -34,12 +36,14 @@ const EVENT_NAMES: Record<AgentName, Record<EventKind, string>> = {
     'post-tool': 'PostToolUse',
     prompt: 'UserPromptSubmit',
     'session-start': 'SessionStart',
+    stop: 'Stop',
   },
   cursor: {
     'pre-tool': 'preToolUse',
     'post-tool': 'postToolUse',
     prompt: 'beforeSubmitPrompt',
     'session-start': 'sessionStart',
+    stop: 'stop',
   },
 }
 

@@ -33,7 +33,8 @@ describe('spar install', () => {
     mkdirSync(join(home, '.claude'), { recursive: true })
     install()
     const hooks = read(claudeSettings()).hooks
-    expect(Object.keys(hooks).sort()).toEqual(['PostToolUse', 'PreToolUse', 'SessionStart', 'UserPromptSubmit'])
+    expect(Object.keys(hooks).sort())
+      .toEqual(['PostToolUse', 'PreToolUse', 'SessionStart', 'Stop', 'UserPromptSubmit'])
     expect(hooks.PreToolUse[0].hooks[0].command).toContain('spar hook gate')
   })
 

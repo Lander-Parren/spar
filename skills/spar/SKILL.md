@@ -59,8 +59,16 @@ Record with `spar predict --session <id> --q1 "..." --q2 "..." --q3 "..."`.
 |---|---|
 | 0 rush | Implement normally. Afterwards, ask one 30-second question about a real decision point you hit. |
 | 1 standard | Implement normally, then do step 5. |
-| 2 skeleton | Write signatures, imports, and wiring. Leave every line that carries the decision as `TODO(spar: <precise instruction>)`. The user writes those 5–10 lines. Then stop and wait. |
-| 3 transcript | **Write nothing.** Deliver the whole implementation in chat with enough explanation to place it: which file, where in it, why there. Record it, then stop and wait. |
+| 2 skeleton | Write signatures, imports, wiring, **and a test that fails**. Leave every line that carries the decision as `TODO(spar: <precise instruction>)`. The user writes those 5–10 lines. Then stop and wait. |
+| 3 transcript | **Write the test file and nothing else.** Deliver the implementation in chat with enough explanation to place it: which file, where in it, why there. Record it, then stop and wait. |
+
+**At levels 2 and 3, always leave a failing test behind.** A marker with no test hands the
+user a guess and nothing to check it against, so the only way for them to find out whether
+they were right is to ask you, which is exactly the dependency this skill exists to break.
+The test is what lets them work alone and know.
+
+Make it fail first. A test that already passes against an empty stub pins no behaviour.
+spar refuses the handover in both cases: no test at all, and a test that is already green.
 
 At level 2 the skeleton is recorded for you when you write it. A post-write check
 verifies you actually left a marker somewhere in the task — if it complains, you left

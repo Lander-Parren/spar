@@ -56,6 +56,13 @@ export const claudeCode: Adapter = {
           exitCode: 0,
         }
 
+      case 'block':
+        return {
+          stdout: JSON.stringify({ decision: 'block', reason: decision.reason }),
+          stderr: '',
+          exitCode: 0,
+        }
+
       case 'feedback':
         // Exit 2 is the documented way to hand a blocking complaint back to Claude.
         return { stdout: '', stderr: decision.message, exitCode: 2 }
@@ -73,5 +80,7 @@ function hookEventName(kind: EventKind): string {
       return 'UserPromptSubmit'
     case 'session-start':
       return 'SessionStart'
+    case 'stop':
+      return 'Stop'
   }
 }

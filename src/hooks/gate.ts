@@ -1,6 +1,7 @@
 import { loadConfig, trackedFor, trackedProject } from '../core/config.js'
 import { writeTargets } from '../core/shell-writes.js'
-import { readState, touchTask } from '../core/store.js'
+import { readState, touchTask, writeState } from '../core/store.js'
+import { isTestPath } from '../core/test-paths.js'
 import { LEVEL_NAMES } from '../core/types.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 
@@ -20,14 +21,17 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
   try {
     const config = loadConfig()
 
+    let targets: string[] = []
     if (event.toolName && SHELL_TOOLS.test(event.toolName)) {
       // A shell command is a write only if it actually writes somewhere tracked. This
       // is where most writes really happen: an agent reaches for `cat > f <<EOF` far
       // more often than for a write tool, and some setups tell it to.
-      const targets = writeTargets(event.command ?? '', event.cwd)
+      targets = writeTargets(event.command ?? '', event.cwd)
       if (!targets.some((path) => trackedProject(path, config))) return { type: 'allow' }
     } else if (event.toolName && !WRITE_TOOLS.test(event.toolName)) {
       return { type: 'allow' }
+    } else if (event.filePath) {
+      targets = [event.filePath]
     }
     // By working directory or by target file: starting the agent a level up must not
     // quietly switch the gate off.
@@ -35,7 +39,7 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     // Neither is tracked: the inert guarantee. A fresh install does nothing.
     if (!project) return { type: 'allow' }
 
-    const state = readState(event.sessionId)
+    let state = readState(event.sessionId)
     if (state.rush) return { type: 'allow' }
     if (state.trivial) return { type: 'allow' }
 
@@ -64,9 +68,24 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
       }
     }
 
-    if (state.level === 0) return { type: 'allow' }
+    const level = state.level
+    if (level === 0) return { type: 'allow' }
 
-    if (state.level === 3) {
+    // At every level, a test being written is worth remembering: handover checks that
+    // the user was left something to measure themselves against.
+    if (targets.length > 0 && targets.every(isTestPath)) {
+      // Keep the local copy in step: touchTask below writes state back, and handing it a
+      // stale object would erase the flag we just set.
+      if (!state.testWritten) {
+        state = { ...state, testWritten: true }
+        writeState(state)
+      }
+      // At level 3 the agent writes the test and nothing else. The test is the brief;
+      // the implementation is the user's.
+      if (level === 3) return { type: 'allow' }
+    }
+
+    if (level === 3) {
       return {
         type: 'deny',
         userMessage: 'spar level 3: you write this one.',
@@ -89,7 +108,7 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
         type: 'deny',
         userMessage: 'spar: answer the three questions first.',
         agentMessage: [
-          `spar is at level ${state.level} (${LEVEL_NAMES[state.level]}) but the user has not`,
+          `spar is at level ${level} (${LEVEL_NAMES[level]}) but the user has not`,
           'predicted yet. Ask them the three questions from the skill, then record the answers:',
           `  spar predict --session ${s} --q1 "..." --q2 "..." --q3 "..."`,
           '',

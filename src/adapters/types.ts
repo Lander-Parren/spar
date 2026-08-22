@@ -6,7 +6,7 @@
  * and the gate's logic is written once, so the four clients cannot drift apart.
  */
 
-export type EventKind = 'pre-tool' | 'post-tool' | 'prompt' | 'session-start'
+export type EventKind = 'pre-tool' | 'post-tool' | 'prompt' | 'session-start' | 'stop'
 
 export interface NormalizedEvent {
   kind: EventKind
@@ -33,6 +33,8 @@ export type NormalizedDecision =
   | { type: 'context'; context: string }
   /** Complain after the fact so the agent can correct itself. */
   | { type: 'feedback'; message: string }
+  /** Refuse to let the agent end its turn yet. */
+  | { type: 'block'; reason: string }
   | { type: 'noop' }
 
 export interface RenderedDecision {
