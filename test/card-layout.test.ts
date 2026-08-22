@@ -36,7 +36,12 @@ function expectSaneGeometry(l: Layout2D): void {
       expect(crosses).toBe(false)
     }
   }
-  const bottom = Math.max(...l.boxes.map((b) => b.y + b.h), ...l.labels.map((t) => t.y))
+  // Arrows are content too: a sequence lifeline runs well below the last label.
+  const bottom = Math.max(
+    ...l.boxes.map((b) => b.y + b.h),
+    ...l.labels.map((t) => t.y),
+    ...l.arrows.flatMap((a) => a.points.map((p) => p[1])),
+  )
   expect(l.height - bottom).toBeLessThanOrEqual(60)
 }
 
@@ -131,5 +136,49 @@ describe('fanout layout', () => {
     const receivers = l.boxes.slice(1)
     const spread = (receivers[0]!.x + receivers.at(-1)!.x + receivers.at(-1)!.w) / 2
     expect(Math.abs(source.x + source.w / 2 - spread)).toBeLessThanOrEqual(2)
+  })
+})
+
+function sequence(dirs: ('>' | '<')[]): CardSpec {
+  return {
+    layout: 'sequence', title: 't', subtitle: 's', bullets: [],
+    actors: [parseRole('a:Sender'), parseRole('b:Receiver')],
+    messages: dirs.map((d, i) => parseMessage(`${d}:message ${i + 1}`)),
+  }
+}
+
+describe('sequence layout', () => {
+  it('places the two actors side by side on the same row', () => {
+    const spec = sequence(['>', '<'])
+    const l = layout(spec, roleSlots(spec))
+    const [left, right] = l.boxes
+    expect(left!.y).toBe(right!.y)
+    expect(left!.x + left!.w).toBeLessThan(right!.x)
+  })
+
+  it('is geometrically sane across its whole range', () => {
+    for (const n of [2, 3, 4]) {
+      const dirs = Array.from({ length: n }, (_, i) => (i % 2 ? '<' : '>')) as ('>' | '<')[]
+      expectSaneGeometry(layout(sequence(dirs), roleSlots(sequence(dirs))))
+    }
+  })
+
+  it('numbers the messages in order', () => {
+    const spec = sequence(['>', '<', '>'])
+    const numbered = layout(spec, roleSlots(spec)).arrows.filter((a) => a.index !== undefined)
+    expect(numbered.map((a) => a.index)).toEqual([1, 2, 3])
+  })
+
+  it('points each message the way its direction says', () => {
+    const spec = sequence(['>', '<'])
+    const [first, second] = layout(spec, roleSlots(spec)).arrows.filter((a) => a.index !== undefined)
+    expect(first!.points[0]![0]).toBeLessThan(first!.points.at(-1)![0])
+    expect(second!.points[0]![0]).toBeGreaterThan(second!.points.at(-1)![0])
+  })
+
+  it('draws a lifeline under each actor', () => {
+    const spec = sequence(['>', '<'])
+    const lifelines = layout(spec, roleSlots(spec)).arrows.filter((a) => a.index === undefined)
+    expect(lifelines).toHaveLength(2)
   })
 })

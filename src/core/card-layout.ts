@@ -49,6 +49,8 @@ export function layout(spec: CardSpec, slots: Map<string, number>): Layout2D {
       return chain(spec, slots)
     case 'fanout':
       return fanout(spec, slots)
+    case 'sequence':
+      return sequence(spec, slots)
     default:
       throw new Error(`layout not implemented: ${spec.layout}`)
   }
@@ -131,4 +133,42 @@ function fanout(spec: CardSpec, slots: Map<string, number>): Layout2D {
   }
 
   return { width: CARD_W, height: rowY + h + MARGIN, boxes: [source, ...boxes], arrows, labels }
+}
+
+function sequence(spec: CardSpec, slots: Map<string, number>): Layout2D {
+  const [left, right] = spec.actors!
+  const messages = spec.messages ?? []
+  const w = 300
+  const h = 74
+  const top = 40
+  const leftX = MARGIN + 40
+  const rightX = CARD_W - MARGIN - 40 - w
+
+  const boxes: Box[] = [
+    { x: leftX, y: top, w, h, label: left!.label, slot: slotOf(slots, left!.role) },
+    { x: rightX, y: top, w, h, label: right!.label, slot: slotOf(slots, right!.role) },
+  ]
+
+  const laneTop = top + h + 40
+  const laneGap = 66
+  const bottom = laneTop + laneGap * messages.length
+  const leftLine = leftX + w / 2
+  const rightLine = rightX + w / 2
+
+  // Lifelines first, so a message drawn later sits on top of them.
+  const arrows: Arrow[] = [
+    { points: [[leftLine, top + h], [leftLine, bottom]], slot: boxes[0]!.slot },
+    { points: [[rightLine, top + h], [rightLine, bottom]], slot: boxes[1]!.slot },
+  ]
+
+  const labels: FloatLabel[] = []
+  messages.forEach((m, i) => {
+    const y = laneTop + laneGap * i + laneGap / 2
+    const from = m.dir === '>' ? leftLine : rightLine
+    const to = m.dir === '>' ? rightLine - 8 : leftLine + 8
+    arrows.push({ points: [[from, y], [to, y]], slot: i % 2, index: i + 1 })
+    labels.push({ x: (leftLine + rightLine) / 2, y: y - 12, text: m.label, anchor: 'middle', style: 'plain' })
+  })
+
+  return { width: CARD_W, height: bottom + MARGIN, boxes, arrows, labels }
 }
