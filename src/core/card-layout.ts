@@ -47,6 +47,8 @@ export function layout(spec: CardSpec, slots: Map<string, number>): Layout2D {
   switch (spec.layout) {
     case 'chain':
       return chain(spec, slots)
+    case 'fanout':
+      return fanout(spec, slots)
     default:
       throw new Error(`layout not implemented: ${spec.layout}`)
   }
@@ -92,4 +94,41 @@ function chain(spec: CardSpec, slots: Map<string, number>): Layout2D {
   }
 
   return { width: CARD_W, height: top + h + MARGIN, boxes, arrows, labels }
+}
+
+function fanout(spec: CardSpec, slots: Map<string, number>): Layout2D {
+  const receivers = spec.to ?? []
+  const gap = 50
+  const inner = CARD_W - 2 * MARGIN
+  const w = Math.floor((inner - gap * (receivers.length - 1)) / receivers.length)
+  const h = 80
+  const rowY = 200
+
+  const boxes: Box[] = receivers.map((r, i) => ({
+    x: MARGIN + i * (w + gap), y: rowY, w, h,
+    label: r.label, slot: slotOf(slots, r.role),
+  }))
+
+  const spread = (boxes[0]!.x + boxes.at(-1)!.x + boxes.at(-1)!.w) / 2
+  const sourceW = Math.min(280, inner)
+  const source: Box = {
+    x: Math.round(spread - sourceW / 2), y: 50, w: sourceW, h,
+    label: spec.from!.label, slot: slotOf(slots, spec.from!.role),
+  }
+
+  // The receivers hang off a shared bar rather than off the source directly: that is
+  // what says "any of these", instead of "these three specific things".
+  const barY = 155
+  const arrows: Arrow[] = boxes.map((b) => ({
+    points: [[b.x + b.w / 2, barY], [b.x + b.w / 2, b.y - 6]] as [number, number][],
+    slot: b.slot,
+  }))
+
+  const labels: FloatLabel[] = []
+  if (spec.via) {
+    arrows.push({ points: [[spread, source.y + source.h], [spread, barY - 6]], slot: source.slot })
+    labels.push({ x: spread, y: barY - 14, text: spec.via, anchor: 'middle', style: 'plain' })
+  }
+
+  return { width: CARD_W, height: rowY + h + MARGIN, boxes: [source, ...boxes], arrows, labels }
 }

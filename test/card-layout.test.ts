@@ -92,3 +92,44 @@ describe('chain layout', () => {
     expect(layout(spec, roleSlots(spec)).width).toBe(CARD_W)
   })
 })
+
+function fanout(n: number, via?: string): CardSpec {
+  return {
+    layout: 'fanout', title: 't', subtitle: 's', bullets: [],
+    from: parseRole('src:Protocol'),
+    to: Array.from({ length: n }, (_, i) => parseRole(`r${i % 2}:Agent ${i + 1}`)),
+    ...(via ? { via } : {}),
+  }
+}
+
+describe('fanout layout', () => {
+  it('places the source above every receiver', () => {
+    const spec = fanout(3)
+    const l = layout(spec, roleSlots(spec))
+    const [source, ...receivers] = l.boxes
+    for (const r of receivers) expect(source!.y + source!.h).toBeLessThanOrEqual(r.y)
+  })
+
+  it('is geometrically sane across its whole range', () => {
+    for (const n of [2, 3, 4]) {
+      const spec = fanout(n)
+      expectSaneGeometry(layout(spec, roleSlots(spec)))
+    }
+  })
+
+  it('draws one arrow per receiver, plus the source arrow when a bar is asked for', () => {
+    const plain = fanout(3)
+    expect(layout(plain, roleSlots(plain)).arrows).toHaveLength(3)
+    const barred = fanout(3, 'any compliant receiver')
+    expect(layout(barred, roleSlots(barred)).arrows).toHaveLength(4)
+  })
+
+  it('centres the source over the receivers', () => {
+    const spec = fanout(4)
+    const l = layout(spec, roleSlots(spec))
+    const source = l.boxes[0]!
+    const receivers = l.boxes.slice(1)
+    const spread = (receivers[0]!.x + receivers.at(-1)!.x + receivers.at(-1)!.w) / 2
+    expect(Math.abs(source.x + source.w / 2 - spread)).toBeLessThanOrEqual(2)
+  })
+})
