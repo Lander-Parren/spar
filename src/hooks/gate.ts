@@ -2,6 +2,7 @@ import { loadConfig, trackedFor, trackedProject } from '../core/config.js'
 import { writeTargets } from '../core/shell-writes.js'
 import { readState, touchTask, writeState } from '../core/store.js'
 import { isTestPath } from '../core/test-paths.js'
+import { GUIDE } from '../core/guide.js'
 import { LEVEL_NAMES } from '../core/types.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 
@@ -50,20 +51,13 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
         type: 'deny',
         userMessage: 'spar: predict before you look.',
         agentMessage: [
-          'spar: this task has not been gated yet. Do NOT retry the edit until these steps are done.',
+          'spar: this task has not been gated yet. Do not retry the edit until it is.',
           '',
-          'Follow the `spar` skill. In short:',
-          '1. Judge whether this change is non-trivial. If it is trivial (rename, formatting,',
-          `   comment, test data, mechanical repetition of an existing pattern), run:`,
-          `     spar mark --session ${s} --trivial`,
-          '   and continue as normal.',
-          '2. Otherwise name 1-3 concepts this change touches and ask for a level:',
-          `     spar suggest-level --session ${s} --concept "<concept>"`,
-          '3. Put the suggested level (with its reason) to the user, then ask them the three',
-          '   questions from the skill and record their answers:',
-          `     spar predict --session ${s} --q1 "..." --q2 "..." --q3 "..."`,
+          `  spar mark --session ${s} --trivial            (if this change decides nothing)`,
+          `  spar suggest-level --session ${s} --concept "<concept>"`,
+          `  spar predict --session ${s} --q1 "..." --q2 "..." --q3 "..."`,
           '',
-          'Then make the edit.',
+          `Follow the spar skill. Without it: spar guide ${GUIDE.loop}`,
         ].join('\n'),
       }
     }
@@ -90,15 +84,13 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
         type: 'deny',
         userMessage: 'spar level 3: you write this one.',
         agentMessage: [
-          'spar is at level 3 (transcript) for this task. You may not write files.',
+          'spar is at level 3 for this task. You may write the test file, nothing else.',
           '',
-          'Deliver the full implementation in chat instead, with enough explanation that the',
-          'user can place it themselves: which file, where in it, and why there. Then stop and',
-          'wait. When the user says they are done, run:',
-          `  spar done --session ${s}`,
-          'and compare what they actually wrote against what you proposed.',
+          `  spar propose --session ${s} --file <path>     (record what you offer in chat)`,
+          `  spar done --session ${s}                      (when the user says they are done)`,
+          `  spar level --session ${s} <0-2>               (if this does not warrant level 3)`,
           '',
-          `If this task turns out not to warrant level 3, the user can lower it with:  spar level --session ${s} <0-2>`,
+          `Follow the spar skill. Without it: spar guide ${GUIDE.loop}`,
         ].join('\n'),
       }
     }
@@ -108,12 +100,11 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
         type: 'deny',
         userMessage: 'spar: answer the three questions first.',
         agentMessage: [
-          `spar is at level ${level} (${LEVEL_NAMES[level]}) but the user has not`,
-          'predicted yet. Ask them the three questions from the skill, then record the answers:',
+          `spar is at level ${level} (${LEVEL_NAMES[level]}) and the user has not predicted yet.`,
+          '',
           `  spar predict --session ${s} --q1 "..." --q2 "..." --q3 "..."`,
           '',
-          '"no idea" is a valid answer to any of them — record it verbatim, do not coach them',
-          'into a guess. Then make the edit.',
+          `Follow the spar skill. Without it: spar guide ${GUIDE.loop}`,
         ].join('\n'),
       }
     }

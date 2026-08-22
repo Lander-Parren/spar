@@ -6,6 +6,7 @@ import { readProposals } from '../core/proposals.js'
 import { diffLines, hasChanges, renderDiff } from '../core/diff.js'
 import { LEVEL_NAMES, type Config } from '../core/types.js'
 import { MARKER } from '../hooks/skeleton.js'
+import { GUIDE } from '../core/guide.js'
 
 /**
  * `spar done` — the closing review, at levels 2 and 3.
@@ -75,26 +76,15 @@ export function cmdDone(sessionId: string): number {
       '---',
       '',
       anyDiff
-        ? 'Sort every difference above into exactly one kind, and say which:'
-        : 'No textual differences. Do not stop here — go to the questions below.',
+        ? 'Sort every difference above into one kind, log the first two, and ask why they'
+        : 'No textual differences. Do not stop here.',
+      anyDiff ? 'placed it where they did.' : 'Ask why they placed it where they did.',
       '',
-      '  misconception  they misunderstood something      -> log it',
-      '  typo-bug       they mistyped or mis-wired it     -> log it too, still a gap',
-      '  improvement    theirs is better than yours       -> say so plainly, do NOT log as a gap',
-      '',
-      'Then ask them WHY they placed it where they did, and what they expect to break.',
-      'That question is the real test: it survives copy-paste, so you never have to police',
-      'how the code got there.',
-      '',
-      'If a misconception has three or more moving parts, a paragraph is the wrong shape.',
-      'Draw it, then log it:',
-      `  spar card --layout compare --title "<the concept>" --subtitle "<one line>" \\`,
-      '    --card-pane "wrong:What you expected|<their model>" \\',
-      '    --card-pane "right:What is true|<the reality, and why>"',
-      '',
-      'Log the first two kinds:',
       `  spar log --session ${sessionId} --concept "<concept>" \\`,
-      '    --model "<the belief, no framing words>" --reality "<what is true>" --kind <misconception|typo-bug>',
+      '    --model "<the belief, no framing words>" --reality "<what is true>" \\',
+      '    --kind <misconception|typo-bug>',
+      '',
+      `Follow the spar skill. Without it: spar guide ${GUIDE.review}`,
     ].join('\n'),
   )
   return 0

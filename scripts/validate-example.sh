@@ -163,6 +163,16 @@ check "a correct answer moves it up a box"       2 "$(python3 -c "
 import json
 print([json.loads(l) for l in open('$SPAR_HOME/gaps.jsonl') if json.loads(l)['id']=='$GAP'][0]['box'])")"
 
+section "one source for the procedure"
+$CLI guide the-closing-review >/dev/null 2>&1
+check "guide prints a section"                   0 $?
+$CLI guide no-such-thing >/dev/null 2>&1
+check "and refuses one that does not exist"      1 $?
+# The point of the guide: a hook names a section, so that section has to exist.
+check "every section a hook points at resolves"  0 "$(node -e "
+const { GUIDE, section } = require('./dist/core/guide.js');
+process.exit(Object.values(GUIDE).every((s) => section(s)) ? 0 : 1)" >/dev/null 2>&1; echo $?)"
+
 section "the views"
 $CLI stats >/dev/null 2>&1
 check "stats renders"                            0 $?

@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { loadConfig, trackedFor } from '../core/config.js'
 import { readState, writeState } from '../core/store.js'
+import { GUIDE } from '../core/guide.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 
 /**
@@ -33,9 +34,9 @@ export function handover(event: NormalizedEvent): NormalizedDecision {
         type: 'block',
         reason: [
           'spar: the test you wrote passes already, against a stub that does nothing.',
+          'Make it fail first, then hand it over.',
           '',
-          'A green test pins no behaviour, so it tells the user nothing about whether their',
-          'implementation is right. Make it fail first, then hand it over.',
+          `Follow the spar skill. Without it: spar guide ${GUIDE.handover}`,
         ].join('\n'),
       }
     }
@@ -47,14 +48,9 @@ export function handover(event: NormalizedEvent): NormalizedDecision {
       type: 'block',
       reason: [
         `spar: level ${state.level} hands this work to the user, but no test was written.`,
+        'Write one that fails, then stop again.',
         '',
-        'Write a test that pins the behaviour and currently fails, so they can tell whether',
-        'they got it right without asking you. That is the whole point of handing it over:',
-        'a marker with no test leaves them alone with a guess.',
-        '',
-        state.level === 3
-          ? 'At level 3 you may write the test file and nothing else.'
-          : 'Then stop again.',
+        `Follow the spar skill. Without it: spar guide ${GUIDE.handover}`,
       ].join('\n'),
     }
   } catch {
