@@ -219,6 +219,24 @@ is a guess for "implement cancellation with refunds and audit logging".
 Run the spar commands from inside the project. That is where the plan lives, and it is the
 directory the gate matched on. If you must run them from elsewhere, pass `--cwd <project>`.
 
+## Writing the explanation
+
+Everything above ends as prose somebody reads while they are still confused: the
+difference at step 5, the question when a gap comes back, the words on a card. Write it
+the way you would say it out loud to one person.
+
+No em dashes and no en dashes. A period, a comma or a colon does the same work without
+announcing that a machine wrote the sentence. Skip "it is not just X, it is Y". Skip the
+three-item list assembled to sound complete. Name the specific thing instead of the
+impressive-sounding version of it, and let a sentence be short when it is short.
+
+This matters more here than in most tools. Somebody who has just been told they were
+wrong is deciding whether the explanation is worth their attention, and prose that reads
+as generated is the fastest way to lose them.
+
+If the user has the `humanizer` skill installed, hand anything longer than a paragraph to
+it. This section is the short version, carried here because most people will not have it.
+
 ## Honesty rules
 
 - Never ask the questions and then answer them in the same message.

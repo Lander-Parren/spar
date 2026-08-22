@@ -196,6 +196,22 @@ never intercepts the host's own writes. That limitation is the whole argument fo
 maintaining per agent hook adapters, and the reason the voluntary tiers make a good trial
 but a poor substitute.
 
+## Installing it as a plugin
+
+```
+/plugin marketplace add Lander-Parren/spar
+```
+
+That offers two plugins. `spar` is this repo. `humanizer` is optional and not mine: it is
+[blader/humanizer](https://github.com/blader/humanizer), MIT, Copyright (c) 2025 Siqi Chen,
+pinned to a specific commit rather than tracking its main branch.
+
+It is listed alongside spar rather than copied into it, so it updates from its own
+repository and keeps its own author. The reason it is there at all: spar spends its whole
+life explaining something to a person who is still confused, and an explanation that reads
+as machine-written is the fastest way to lose them. spar's own skill carries a short
+version of that rule for people who do not install it.
+
 ## What it will not do
 
 Everything stays on your machine, in `~/.spar/`. No account, no telemetry, no network calls,

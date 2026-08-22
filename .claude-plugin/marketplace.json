@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace-manifest.json",
+  "name": "spar",
+  "owner": {
+    "name": "Lander Parren",
+    "url": "https://github.com/Lander-Parren"
+  },
+  "description": "Keep learning while AI writes the code, plus the writing skill spar leans on when it explains something back to you.",
+  "plugins": [
+    {
+      "name": "spar",
+      "source": "./",
+      "description": "Predict before the agent implements, then log every gap between your model and reality as a curriculum.",
+      "license": "MIT",
+      "keywords": [
+        "learning",
+        "deliberate-practice",
+        "code-review",
+        "hooks",
+        "spaced-repetition"
+      ]
+    },
+    {
+      "name": "humanizer",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/blader/humanizer.git",
+        "sha": "e2e92e7b4b8229253ed5c8e81dc65463fdeddda5"
+      },
+      "description": "Remove the tells of AI writing. Optional, and not written by spar: MIT, Copyright (c) 2025 Siqi Chen, https://github.com/blader/humanizer. Listed here because spar spends its whole life explaining things to someone who is still confused, and that writing should not read like a machine produced it.",
+      "license": "MIT",
+      "keywords": [
+        "writing",
+        "editing",
+        "prose",
+        "style"
+      ]
+    }
+  ]
+}
