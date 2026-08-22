@@ -68,6 +68,31 @@ describe('gate', () => {
     rmSync(elsewhere, { recursive: true, force: true })
   })
 
+  it('fires on a shell command that writes into a tracked project', async () => {
+    config([project])
+    const decision = await run({
+      toolName: 'Bash',
+      command: `cat > ${join(project, 'src', 'a.ts')} <<'EOF'\nbody\nEOF`,
+    })
+    expect(decision.type).toBe('deny')
+  })
+
+  it('catches an in-place rewrite too', async () => {
+    config([project])
+    const decision = await run({
+      toolName: 'Bash',
+      command: `perl -0pi -e 's/a/b/' ${join(project, 'src', 'a.ts')}`,
+    })
+    expect(decision.type).toBe('deny')
+  })
+
+  it('leaves shell commands that only read alone', async () => {
+    config([project])
+    for (const command of [`cat ${join(project, 'a.ts')}`, 'npm test', 'npm test > /tmp/out.txt']) {
+      expect((await run({ toolName: 'Bash', command })).type).toBe('allow')
+    }
+  })
+
   it('allows non-write tools through untouched', async () => {
     config([project])
     expect((await run({ toolName: 'Read' })).type).toBe('allow')

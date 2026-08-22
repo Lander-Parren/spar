@@ -6,7 +6,7 @@ before you turn it on anywhere that matters.
 No dependencies and no build step. Node 22 runs the TypeScript directly.
 
 ```sh
-npm test     # three tests, via node --test
+npm test     # ten tests, via node --test
 npm run check
 ```
 
@@ -14,8 +14,18 @@ npm run check
 
 ```sh
 npm i -g spar-agent          # or, from the repo root: npm link
-spar install
+spar install                 # required: without this nothing is wired up at all
 spar setup --project "$(pwd)" --stack "TypeScript"
+```
+
+Both steps matter and they do different things. `spar install` puts the hooks in your
+agent's settings; `spar setup` names the project they apply to. With only the second, the
+config looks right and nothing ever fires.
+
+Check it took:
+
+```sh
+grep -c 'spar hook' ~/.claude/settings.json    # should be 4
 ```
 
 Then open your agent here and ask for something real:
@@ -54,3 +64,9 @@ To stop gating this project without removing anything else, drop it from
 Node strips types without a compiler, and a parameter property emits real code, so it is
 not something type stripping can do. The same applies to enums and namespaces if you
 extend this.
+
+`cancel()` refunds before it commits, the same way `place()` charges before it commits.
+That ordering owns one failure and rules out the other: a refund that fails leaves the
+order `paid` and untouched, but a refund that succeeds ahead of a commit that throws hands
+back the money while the order still reads `paid`. A second `cancel()` is a no-op rather
+than an error, so a retry cannot refund twice.

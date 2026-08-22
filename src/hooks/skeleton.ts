@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { loadConfig, trackedFor } from '../core/config.js'
+import { writeTargets } from '../core/shell-writes.js'
 import { readState } from '../core/store.js'
 import { addProposal, readProposals } from '../core/proposals.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
@@ -14,6 +15,7 @@ import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 export const MARKER = 'TODO(spar:'
 
 const WRITE_TOOLS = /^(Write|Edit|MultiEdit|str_replace|create_file|write_file)$/i
+const SHELL_TOOLS = /^(Bash|Shell|run_command|run_terminal_cmd|execute_command)$/i
 
 /**
  * Runs after a write. At level 2 it verifies the agent actually left the
@@ -25,7 +27,8 @@ const WRITE_TOOLS = /^(Write|Edit|MultiEdit|str_replace|create_file|write_file)$
  */
 export function skeleton(event: NormalizedEvent): NormalizedDecision {
   try {
-    if (event.toolName && !WRITE_TOOLS.test(event.toolName)) return { type: 'noop' }
+    const shell = Boolean(event.toolName && SHELL_TOOLS.test(event.toolName))
+    if (event.toolName && !shell && !WRITE_TOOLS.test(event.toolName)) return { type: 'noop' }
 
     const config = loadConfig()
     if (!trackedFor(event.cwd, event.filePath, config)) return { type: 'noop' }
@@ -33,7 +36,8 @@ export function skeleton(event: NormalizedEvent): NormalizedDecision {
     const state = readState(event.sessionId)
     if (state.level !== 2 || state.trivial || state.rush) return { type: 'noop' }
 
-    const path = event.filePath
+    // A shell write names its target inside the command, not in a file_path field.
+    const path = event.filePath ?? (shell ? writeTargets(event.command ?? '', event.cwd)[0] : undefined)
     if (!path) return { type: 'noop' }
 
     const content = readWritten(path, event.content)

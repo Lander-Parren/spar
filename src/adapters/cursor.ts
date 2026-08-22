@@ -28,6 +28,8 @@ export const cursor: Adapter = {
       toolName: str(raw.tool_name),
       filePath: str(input.file_path) ?? str(input.path) ?? str(input.target_file),
       content: str(input.content) ?? str(input.new_string),
+      // beforeShellExecution puts it at the top level; a shell tool call nests it.
+      command: str(raw.command) ?? str(input.command),
       prompt: str(raw.prompt),
     }
   },

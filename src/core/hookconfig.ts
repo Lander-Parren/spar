@@ -17,7 +17,9 @@ export interface HookSpec {
 }
 
 export const HOOKS: HookSpec[] = [
-  { hook: 'gate', kind: 'pre-tool', matcher: 'Write|Edit|MultiEdit', timeout: 5 },
+  // Bash is in the matcher because that is where most writes really happen. The gate
+  // inspects the command and only stops the ones that land in a tracked project.
+  { hook: 'gate', kind: 'pre-tool', matcher: 'Write|Edit|MultiEdit|Bash', timeout: 5 },
   { hook: 'skeleton', kind: 'post-tool', matcher: 'Write|Edit|MultiEdit', timeout: 5 },
   { hook: 'boundary', kind: 'prompt', matcher: '*', timeout: 5 },
   { hook: 'due', kind: 'session-start', matcher: '*', timeout: 10 },

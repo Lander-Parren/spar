@@ -66,6 +66,17 @@ section "the gate"
 check "fires on the first write"                 deny  "$(gate "$PROJECT" "$FILE")"
 check "fires from a parent directory too"        deny  "$(gate "$SANDBOX" "$FILE")"
 check "stays out of an untracked directory"      allow "$(gate "$SANDBOX" "$SANDBOX/loose.ts")"
+bash_gate() { printf '{"session_id":"s1","cwd":"%s","tool_name":"Bash","tool_input":{"command":%s}}' \
+    "$PROJECT" "$1" | $CLI hook gate --agent claude-code 2>/dev/null \
+    | python3 -c 'import json,sys; d=sys.stdin.read().strip(); print(json.loads(d)["hookSpecificOutput"]["permissionDecision"] if d else "allow")'; }
+# An agent writes files with the shell far more often than with a write tool, so these
+# are the ones that actually matter.
+check "catches a heredoc write"                  deny  "$(bash_gate "\"cat > src/orders/x.ts <<'EOF'\\nbody\\nEOF\"")"
+check "catches an in-place rewrite"              deny  "$(bash_gate "\"perl -0pi -e 's/a/b/' src/orders/x.ts\"")"
+check "catches tee"                              deny  "$(bash_gate "\"echo x | tee src/orders/x.ts\"")"
+check "leaves a plain test run alone"            allow "$(bash_gate "\"npm test\"")"
+check "leaves a redirect outside the project"    allow "$(bash_gate "\"npm test > /tmp/out.txt\"")"
+check "leaves a read alone"                      allow "$(bash_gate "\"grep -n foo src/orders/x.ts\"")"
 check "ignores tools that do not write"          allow "$(printf '{"session_id":"s1","cwd":"%s","tool_name":"Read","tool_input":{}}' "$PROJECT" | $CLI hook gate --agent claude-code >/dev/null 2>&1 && echo allow)"
 
 section "predicting opens it, once per task"
