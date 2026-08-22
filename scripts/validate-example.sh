@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+#
+# Drive every part of spar against example/, end to end, in a throwaway home.
+#
+# The unit tests prove the pieces. This proves the wiring: that a real hook payload
+# produces the decision it should, that the loop closes, and that the guarantees the
+# README makes out loud are actually true of the built binary.
+#
+# Usage: npm run validate:example
+
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+SANDBOX="$(mktemp -d)"
+# Deliberately a path that does not exist: the inert claim is that spar creates
+# nothing until a project is named, and mktemp -d would have answered that for it.
+SPAR_HOME="$SANDBOX/home"
+PROJECT="$SANDBOX/example"
+export SPAR_HOME
+cp -R example "$PROJECT"
+
+CLI="node dist/cli.js"
+PASS=0
+FAIL=0
+
+cleanup() { rm -rf "$SPAR_HOME" "$SANDBOX"; }
+trap cleanup EXIT
+
+check() { # check <description> <expected> <actual>
+  if [ "$2" = "$3" ]; then
+    printf '  \033[32mok\033[0m   %s\n' "$1"
+    PASS=$((PASS + 1))
+  else
+    printf '  \033[31mFAIL\033[0m %s\n       expected %s, got %s\n' "$1" "$2" "$3"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+gate() { # gate <cwd> <file> -> allow|deny
+  local out
+  out=$(printf '{"session_id":"%s","cwd":"%s","tool_name":"Write","tool_input":{"file_path":"%s"}}' \
+    "${3:-s1}" "$1" "$2" | $CLI hook gate --agent claude-code 2>/dev/null)
+  [ -z "$out" ] && { echo allow; return; }
+  printf '%s' "$out" | python3 -c 'import json,sys;print(json.load(sys.stdin)["hookSpecificOutput"]["permissionDecision"])'
+}
+
+section() { printf '\n\033[1m%s\033[0m\n' "$1"; }
+
+FILE="$PROJECT/src/orders/order-service.ts"
+
+section "the example itself"
+# In place, not in the copy: the copy has no node_modules above it, so tsc is not
+# resolvable there. The copy exists only so gate scenarios can write into it.
+( cd example && npm test >/dev/null 2>&1 )
+check "its own tests pass"                       0 $?
+( cd example && npm run check >/dev/null 2>&1 )
+check "it typechecks"                            0 $?
+
+section "inert until a project is named"
+check "gate is silent with no config"            allow "$(gate "$PROJECT" "$FILE")"
+check "~/.spar is not even created"              absent "$([ -d "$SPAR_HOME" ] && echo present || echo absent)"
+
+$CLI setup --project "$PROJECT" --stack TypeScript >/dev/null
+
+section "the gate"
+check "fires on the first write"                 deny  "$(gate "$PROJECT" "$FILE")"
+check "fires from a parent directory too"        deny  "$(gate "$SANDBOX" "$FILE")"
+check "stays out of an untracked directory"      allow "$(gate "$SANDBOX" "$SANDBOX/loose.ts")"
+check "ignores tools that do not write"          allow "$(printf '{"session_id":"s1","cwd":"%s","tool_name":"Read","tool_input":{}}' "$PROJECT" | $CLI hook gate --agent claude-code >/dev/null 2>&1 && echo allow)"
+
+section "predicting opens it, once per task"
+$CLI suggest-level --session s1 --concept "transaction boundaries in an ORM" >/dev/null
+$CLI predict --session s1 --q1 "the service layer" --q2 "open a unit of work" --q3 "no idea" >/dev/null
+check "opens after a prediction"                 allow "$(gate "$PROJECT" "$FILE")"
+check "stays open for the rest of the task"      allow "$(gate "$PROJECT" "$PROJECT/src/orders/types.ts")"
+printf '{"session_id":"s1","cwd":"%s","user_prompt":"now add cancellation"}' "$PROJECT" \
+  | $CLI hook boundary --agent claude-code >/dev/null 2>&1
+check "a fresh follow-up leaves the task alone"  allow "$(gate "$PROJECT" "$FILE")"
+python3 -c "
+import json, datetime
+p = '$SPAR_HOME/state/s1.json'
+s = json.load(open(p))
+s['predictedAt'] = (datetime.datetime.now(datetime.timezone.utc)
+                    - datetime.timedelta(minutes=45)).isoformat().replace('+00:00', 'Z')
+json.dump(s, open(p, 'w'))"
+printf '{"session_id":"s1","cwd":"%s","user_prompt":"something new"}' "$PROJECT" \
+  | $CLI hook boundary --agent claude-code >/dev/null 2>&1
+check "re-arms after the task goes quiet"        deny  "$(gate "$PROJECT" "$FILE")"
+$CLI predict --session s1 --q1 a --q2 b --q3 c >/dev/null
+$CLI next --session s1 >/dev/null
+check "spar next re-arms immediately"            deny  "$(gate "$PROJECT" "$FILE")"
+
+section "levels"
+$CLI level --session s2 2 >/dev/null
+$CLI predict --session s2 --q1 a --q2 b --q3 c >/dev/null
+printf 'const x = 1\n' > "$PROJECT/src/bare.ts"
+printf '{"session_id":"s2","cwd":"%s","tool_name":"Write","tool_input":{"file_path":"%s"}}' \
+  "$PROJECT" "$PROJECT/src/bare.ts" | $CLI hook skeleton --agent claude-code >/dev/null 2>&1
+check "level 2 complains without a marker"       2 $?
+printf '// TODO(spar: pick the transaction boundary)\n' > "$PROJECT/src/bare.ts"
+rm -f "$SPAR_HOME/state/s2-proposals.json"
+printf '{"session_id":"s2","cwd":"%s","tool_name":"Write","tool_input":{"file_path":"%s"}}' \
+  "$PROJECT" "$PROJECT/src/bare.ts" | $CLI hook skeleton --agent claude-code >/dev/null 2>&1
+check "level 2 accepts a marker"                 0 $?
+$CLI level --session s3 3 >/dev/null
+$CLI predict --session s3 --q1 a --q2 b --q3 c >/dev/null
+check "level 3 refuses every write"              deny  "$(gate "$PROJECT" "$FILE" s3)"
+$CLI rush --session s4 >/dev/null
+check "rush degrades instead of blocking"        allow "$(gate "$PROJECT" "$FILE" s4)"
+
+section "the log and the return"
+for i in 1 2 3; do
+  $CLI log --session s1 --concept "transaction boundaries in an ORM" \
+    --model "the repository opens it ($i)" --reality "the unit of work does" >/dev/null
+done
+check "gaps.jsonl is valid jsonl"                3 "$(python3 -c "
+import json;print(sum(1 for l in open('$SPAR_HOME/gaps.jsonl') if json.loads(l)))")"
+check "three gaps escalate the level to 3"       3 "$($CLI suggest-level --session s9 \
+  --concept 'transaction boundaries in an ORM' | grep -o 'level [0-3]' | grep -o '[0-3]')"
+check "nothing is due the day it was logged"     0 "$(printf '{"session_id":"s5","cwd":"%s"}' "$PROJECT" \
+  | $CLI hook due --agent claude-code | grep -c 'transaction boundaries')"
+python3 -c "
+import json
+rows = [json.loads(l) for l in open('$SPAR_HOME/gaps.jsonl') if l.strip()]
+rows[0]['due'] = '2020-01-01'
+open('$SPAR_HOME/gaps.jsonl', 'w').write('\n'.join(json.dumps(r) for r in rows) + '\n')"
+DUE=$(printf '{"session_id":"s5","cwd":"%s"}' "$PROJECT" | $CLI hook due --agent claude-code)
+check "an overdue gap comes back at session start" 1 "$(printf '%s' "$DUE" | grep -c 'transaction boundaries')"
+GAP=$(head -1 "$SPAR_HOME/gaps.jsonl" | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')
+$CLI review --session s5 "$GAP" --ok >/dev/null
+check "a correct answer moves it up a box"       2 "$(python3 -c "
+import json
+print([json.loads(l) for l in open('$SPAR_HOME/gaps.jsonl') if json.loads(l)['id']=='$GAP'][0]['box'])")"
+
+section "the views"
+$CLI stats >/dev/null 2>&1
+check "stats renders"                            0 $?
+$CLI dashboard --no-open >/dev/null 2>&1
+check "dashboard renders"                        0 $?
+check "dashboard reaches no network"             0 "$(grep -cE 'https?://' "$SPAR_HOME/dashboard.html")"
+$CLI card --layout chain --no-open --title "Transaction boundaries" \
+  --subtitle "Who opens it, and what happens on failure." \
+  --step "you:You predict" --step "agent:AI implements" --step "you:You compare" >/dev/null 2>&1
+check "a card renders"                           0 $?
+$CLI card --layout chain --no-open --title "Too big" --subtitle x \
+  --step a:1 --step a:2 --step a:3 --step a:4 --step a:5 --step a:6 >/dev/null 2>&1
+check "a card over the limit refuses"            1 $?
+
+section "fail open"
+printf 'not json at all' > "$SPAR_HOME/config.json"
+check "a corrupt config opens the gate"          allow "$(gate "$PROJECT" "$FILE")"
+
+printf '\n\033[1m%s passed, %s failed\033[0m\n' "$PASS" "$FAIL"
+[ "$FAIL" -eq 0 ]

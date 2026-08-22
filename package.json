@@ -36,7 +36,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "emit": "node dist/cli.js emit --root .",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && npm test",
+    "validate:example": "npm run build && bash scripts/validate-example.sh"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

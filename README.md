@@ -196,15 +196,32 @@ already working in.
 
 </details>
 
+## Trying it without risking anything
+
+`example/` is a small TypeScript project with no dependencies, built to be pointed at.
+
+```sh
+cd example
+spar setup --project "$(pwd)" --stack "TypeScript"
+```
+
+Then ask your agent to add order cancellation and watch the gate stop it. `example/README.md`
+explains what to look for.
+
 <details>
 <summary><b>Development</b></summary>
 
 ```sh
 npm install
-npm test          # 118 tests
+npm test              # spar's own suite
 npm run build
-npm run emit      # regenerate the checked-in hook configs
+npm run emit          # regenerate the checked-in hook configs
+npm run validate:example   # drive every hook end to end against example/
 ```
+
+`validate:example` is the one that catches wiring problems. The unit tests prove the
+pieces; that script proves a real hook payload produces the decision it should, in a
+throwaway home, against the built binary.
 
 The same hook definition is checked in three times over: Claude Code's plugin layout, the
 Agent Plugins namespace, and Cursor's. The two standards disagree about where client
