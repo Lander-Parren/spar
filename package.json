@@ -16,16 +16,16 @@
     "spar": "dist/cli.js"
   },
   "files": [
-    "dist",
-    "skills",
-    "templates",
-    "hooks",
+    ".claude-plugin",
+    ".mcp.json",
     "com.anthropic.claude-code",
     "com.cursor",
-    ".claude-plugin",
-    "plugin.json",
+    "dist",
+    "hooks",
     "mcp.json",
-    ".mcp.json"
+    "plugin.json",
+    "skills",
+    "templates"
   ],
   "engines": {
     "node": ">=20"
