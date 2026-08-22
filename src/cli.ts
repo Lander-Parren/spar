@@ -20,12 +20,14 @@ import { cmdGuide } from './commands/guide.js'
 import { cmdInstall } from './commands/install.js'
 import { cmdEmit } from './commands/emit.js'
 import { cmdSetup } from './commands/setup.js'
+import { cmdPlan } from './commands/plan.js'
 import type { GapKind, Level } from './core/types.js'
 
 const HELP = `spar — keep learning while AI writes the code
 
   spar install [--agent claude-code|cursor] [--dry-run]
   spar setup --project <path> [--stack <name>] [--language <code>] [--test-command <cmd>]
+  spar plan [--title <t>] [--step <s> ...] [--from <plan.md>] [--replace] [--clear]
   spar suggest-level --session <id> --concept <c> [--concept <c> ...]
   spar level --session <id> <0-3>
   spar predict --session <id> [--q1 <a>] [--q2 <a>] [--q3 <a>]
@@ -75,6 +77,15 @@ async function main(): Promise<number> {
         stack: flags.string('stack'),
         language: flags.string('language'),
         testCommand: flags.string('test-command'),
+      })
+    case 'plan':
+      return cmdPlan({
+        title: flags.string('title'),
+        steps: flags.all('step'),
+        from: flags.string('from'),
+        clear: flags.bool('clear'),
+        replace: flags.bool('replace'),
+        cwd: cwdOf(flags),
       })
     case 'suggest-level':
       return cmdSuggestLevel(requireSession(flags), flags.all('concept'), cwdOf(flags))
