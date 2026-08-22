@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { dirname, resolve, sep } from 'node:path'
+import { readFileSync, writeFileSync, mkdirSync, realpathSync } from 'node:fs'
+import { basename, dirname, join, resolve, sep } from 'node:path'
 import { paths } from './paths.js'
 import { DEFAULT_CONFIG, type Config, type ProjectConfig } from './types.js'
 
@@ -67,13 +67,36 @@ export function trackedFor(
  * Returns the matching project (deepest match wins, for nested repos) or undefined.
  */
 export function trackedProject(cwd: string, config: Config): ProjectConfig | undefined {
-  const here = resolve(cwd)
+  const here = real(cwd)
   let best: ProjectConfig | undefined
   for (const project of config.projects) {
-    const root = resolve(project.path)
+    const root = real(project.path)
     if (here === root || here.startsWith(root.endsWith(sep) ? root : root + sep)) {
-      if (!best || resolve(project.path).length > resolve(best.path).length) best = project
+      if (!best || root.length > real(best.path).length) best = project
     }
   }
   return best
+}
+
+/**
+ * Compare on real paths, not lexical ones.
+ *
+ * macOS hides /tmp and /var behind symlinks into /private, and the two halves of spar
+ * disagree about which name they use: a shell's `pwd` gives the logical path, which is
+ * what lands in the config, while node's `process.cwd()` gives the physical one. Without
+ * this, a project behind a symlink matches nothing and every command silently does
+ * nothing, which is the inert guarantee firing when it should not.
+ *
+ * A path that does not exist yet is normal here: the gate is asked about files the agent
+ * is only about to write. So resolve the deepest ancestor that does exist and keep the
+ * tail, rather than giving up on the whole path.
+ */
+function real(path: string): string {
+  const absolute = resolve(path)
+  try {
+    return realpathSync(absolute)
+  } catch {
+    const parent = dirname(absolute)
+    return parent === absolute ? absolute : join(real(parent), basename(absolute))
+  }
 }

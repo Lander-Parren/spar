@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { makePlan, readPlan, writePlan } from '../src/core/plan.js'
@@ -111,5 +111,28 @@ describe('outside a tracked project', () => {
     writeTask('s1', elsewhere, { level: 2 })
     expect(readTask('s1', elsewhere)).toMatchObject({ level: 2, fromPlan: false })
     rmSync(elsewhere, { recursive: true, force: true })
+  })
+})
+
+describe('a project reached through a symlink', () => {
+  it('still matches, because macOS hides /tmp and /var behind one', () => {
+    const link = join(home, 'link-to-project')
+    symlinkSync(project, link, 'dir')
+    writePlan(project, makePlan('t', ['one']))
+
+    writeTask('s1', link, { level: 2, predicted: true })
+
+    // Written through the link, readable through the real path: one project, not two.
+    expect(readPlan(project)!.steps[0]).toMatchObject({ level: 2, predicted: true })
+    expect(readTask('s1', link)).toMatchObject({ level: 2, fromPlan: true })
+  })
+
+  it('matches a file that does not exist yet, which is what the gate is usually asked about', () => {
+    const link = join(home, 'link-to-project')
+    symlinkSync(project, link, 'dir')
+    writePlan(project, makePlan('t', ['one']))
+
+    writeTask('s1', tmpdir(), { level: 3 }, join(link, 'src', 'not-written-yet.ts'))
+    expect(readPlan(project)!.steps[0]!.level).toBe(3)
   })
 })
