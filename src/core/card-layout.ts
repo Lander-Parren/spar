@@ -178,8 +178,8 @@ function sequence(spec: CardSpec, slots: Map<string, number>): Layout2D {
 function compare(spec: CardSpec, slots: Map<string, number>): Layout2D {
   const panes = spec.panes ?? []
   const w = CARD_W - 2 * MARGIN
-  const h = 150
-  const gap = 34
+  const h = 118
+  const gap = 30
   // No connectors: a comparison has no flow, and an arrow between two contrasted
   // things would claim a relationship that is not there.
   const boxes: Box[] = panes.map((p, i) => ({

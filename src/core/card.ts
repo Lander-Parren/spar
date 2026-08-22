@@ -29,6 +29,11 @@ export const NEUTRAL = '_'
 
 export const MAX_BULLETS = 3
 export const MAX_ROLES = 3
+/**
+ * SVG text does not wrap, and wrapping it would let cards grow, which is the one thing
+ * this command exists to prevent. So a body that will not fit on one line is refused.
+ */
+export const MAX_BODY = 90
 
 export function parseRole(input: string): Role {
   const at = input.indexOf(':')
@@ -125,6 +130,14 @@ export function validate(spec: CardSpec): void {
       break
     case 'compare':
       count('panes', spec.panes, 2, 2)
+      for (const pane of spec.panes ?? []) {
+        if (pane.body.length > MAX_BODY) {
+          throw new CardError(
+            `pane body: at most ${MAX_BODY} characters, got ${pane.body.length}. ` +
+              'Shorten it, or make it two cards.',
+          )
+        }
+      }
       break
   }
 

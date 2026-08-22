@@ -82,6 +82,23 @@ describe('limits', () => {
   })
 })
 
+describe('a pane body that cannot fit', () => {
+  it('is refused rather than allowed to run outside its box', () => {
+    const long = 'x'.repeat(120)
+    expect(() => validate({
+      layout: 'compare', title: 't', subtitle: 's', bullets: [],
+      panes: [parsePane(`a:Title|${long}`), parsePane('b:Other|short')],
+    })).toThrow(/at most 90 characters/)
+  })
+
+  it('accepts a body that fits', () => {
+    expect(() => validate({
+      layout: 'compare', title: 't', subtitle: 's', bullets: [],
+      panes: [parsePane('a:Title|a body that comfortably fits on one line'), parsePane('b:Other|short')],
+    })).not.toThrow()
+  })
+})
+
 describe('roleSlots', () => {
   it('assigns slots in order of first appearance', () => {
     const slots = roleSlots(chain(['you:1', 'ai:2', 'you:3', 'out:4']))
