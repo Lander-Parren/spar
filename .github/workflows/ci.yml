@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc -p tsconfig.json
+
+      - name: Unit tests
+        run: npm test
+
+      - name: End to end, against example/
+        run: npm run validate:example
+
+      - name: Hook configs are not stale
+        run: |
+          npm run build
+          node dist/cli.js emit --root .
+          git diff --exit-code -- hooks com.anthropic.claude-code com.cursor
+
+      - name: Skill is valid
+        run: npx -y skills-ref@latest validate ./skills/spar
