@@ -107,6 +107,44 @@ spar log --session <id> --concept "<general concept>" \
 
 Without the CLI, use the bundled `scripts/log.sh` with the same arguments.
 
+## The closing review
+
+At levels 2 and 3, once the user says they are done, run `spar done --session <id>`. It
+prints the difference between what you proposed and what they actually wrote.
+
+Sort every difference into exactly one of three kinds, and say which:
+
+- **misconception** they misunderstood something. Log it.
+- **typo-bug** they mistyped or mis-wired it. Log it too; it is still a gap.
+- **improvement** theirs is better than yours. Say so plainly, and do not log it as a gap.
+
+Then ask them **why** they placed it where they did, and what they expect to break. That
+question is the real test, because it survives copy and paste. You never have to police
+how the code got there.
+
+Log the first two kinds:
+
+```
+spar log --session <id> --concept "<concept>" \
+  --model "<the belief, no framing words>" --reality "<what is true>" \
+  --kind <misconception|typo-bug>
+```
+
+If a misconception has three or more moving parts, a paragraph is the wrong shape. Draw
+it as a `compare` card first, then log it.
+
+## Handing work back
+
+At levels 2 and 3 you hand the work to the user, and you must leave a **failing test**
+behind when you do. A marker with no test hands them a guess and nothing to check it
+against, so the only way for them to find out whether they were right is to ask you.
+That is the dependency this skill exists to break.
+
+Make it fail first. A test that already passes against an empty stub pins no behaviour.
+spar refuses the handover in both cases: no test at all, and a test that is already green.
+
+At level 3 you may write the test file and nothing else.
+
 ## When a gap comes back
 
 At session start you may be handed one gap that has come due. Two rules:

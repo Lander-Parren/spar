@@ -16,6 +16,7 @@ import { cmdStats } from './commands/stats.js'
 import { cmdDashboard } from './commands/dashboard.js'
 import { cmdFocus } from './commands/focus.js'
 import { cmdCard } from './commands/card.js'
+import { cmdGuide } from './commands/guide.js'
 import { cmdInstall } from './commands/install.js'
 import { cmdEmit } from './commands/emit.js'
 import { cmdSetup } from './commands/setup.js'
@@ -35,6 +36,7 @@ const HELP = `spar — keep learning while AI writes the code
   spar propose --session <id> --file <path> [--text <content>]   (or pipe on stdin)
   spar review --session <id> <gap-id> [--ok | --nok]
   spar stats [--json]
+  spar guide [<topic>]
   spar dashboard [--no-open]
   spar card --layout chain|fanout|sequence|compare --title <t> --subtitle <s> [...]
   spar focus ["<concept>" ...] [--clear]
@@ -92,6 +94,8 @@ async function main(): Promise<number> {
       return cmdStats(flags.bool('json'))
     case 'dashboard':
       return cmdDashboard(!flags.bool('no-open'))
+    case 'guide':
+      return cmdGuide(flags.positional[0])
     case 'card':
       return cmdCard({
         layout: flags.string('layout') ?? '',

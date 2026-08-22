@@ -232,6 +232,25 @@ spar setup --project "$(pwd)" --stack "TypeScript"
 Then ask your agent to add order cancellation and watch the gate stop it. `example/README.md`
 explains what to look for.
 
+## Where the instructions live
+
+A command emits facts. The skill says what to do with them. `spar done` prints a diff;
+what counts as a misconception rather than a typo is in the skill. The gate reports that
+a task has not been gated and names the commands; why you predict first is in the skill.
+
+That split exists so the procedure can be read by any skills-capable client and changed
+without a release. For agents that cannot load skills, `spar guide <topic>` prints the
+same sections out of the same file:
+
+```sh
+spar guide                       # list the topics
+spar guide the-closing-review
+```
+
+One source, two ways to deliver it, so the two cannot drift apart. A test asserts every
+section a hook points at actually exists, which means renaming a heading breaks the build
+rather than sending someone to a page that is not there.
+
 <details>
 <summary><b>Development</b></summary>
 

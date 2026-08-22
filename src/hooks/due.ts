@@ -2,6 +2,7 @@ import { loadConfig, trackedProject } from '../core/config.js'
 import { readGaps } from '../core/store.js'
 import { readFocus } from '../core/focus.js'
 import { pickDue } from '../core/schedule.js'
+import { GUIDE } from '../core/guide.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 
 /**
@@ -35,16 +36,13 @@ export function due(event: NormalizedEvent): NormalizedDecision {
         `  they thought: ${gap.your_model}`,
         `  reality:      ${gap.reality}`,
         '',
-        'Do NOT bring this up now. Wait for a natural pause — a task finishing, a related',
-        'file coming up, the user asking something adjacent. Then ask them to explain the',
-        'concept in their own words, without showing them the answer above first.',
+        'Do not bring this up now. Wait for a natural pause, then ask them to explain the',
+        'concept in their own words without showing them the answer above.',
         '',
-        'Judge their answer against "reality" and record it:',
         `  spar review --session ${event.sessionId} ${gap.id} --ok    (they had it)`,
         `  spar review --session ${event.sessionId} ${gap.id} --nok   (they did not)`,
         '',
-        'Be honest in that judgement. Marking a shaky answer correct removes the gap from',
-        'the rotation and quietly hides it, which is the one failure this system cannot see.',
+        `Follow the spar skill. Without it: spar guide ${GUIDE.returning}`,
         '',
         'If they cannot answer and the concept has three or more moving parts, explain it',
         'with a card rather than a paragraph:',

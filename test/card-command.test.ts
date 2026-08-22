@@ -82,7 +82,12 @@ describe('spar card', () => {
 })
 
 describe('the two moments that ask for a card', () => {
-  it('spar done suggests a compare card once there is something to compare', async () => {
+  it('the closing review section is where the compare-card advice lives now', async () => {
+    const { GUIDE, section } = await import('../src/core/guide.js')
+    expect(section(GUIDE.review)!).toMatch(/compare.{0,20}card/i)
+  })
+
+  it('spar done prints the diff and points at that section', async () => {
     const { mkdirSync, writeFileSync } = await import('node:fs')
     mkdirSync(join(home, 'state'), { recursive: true })
     writeFileSync(join(home, 'state', 's1.json'), JSON.stringify({
@@ -99,7 +104,9 @@ describe('the two moments that ask for a card', () => {
     vi.spyOn(console, 'log').mockImplementation((s?: unknown) => { lines.push(String(s)) })
     const { cmdDone } = await import('../src/commands/done.js')
     cmdDone('s1')
-    expect(lines.join('\n')).toContain('spar card --layout compare')
+    const out = lines.join('\n')
+    expect(out).toContain('proposed by the agent')
+    expect(out).toContain('spar guide the-closing-review')
   })
 
   it('the due hook asks for a card when the user cannot answer', async () => {
