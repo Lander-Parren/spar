@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { loadConfig, trackedFor } from '../core/config.js'
-import { readState, writeState } from '../core/store.js'
+import { readTask, writeTask } from '../core/task-state.js'
 import { GUIDE } from '../core/guide.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 
@@ -21,7 +21,7 @@ export function handover(event: NormalizedEvent): NormalizedDecision {
     const project = trackedFor(event.cwd, event.filePath, config)
     if (!project) return { type: 'noop' }
 
-    const state = readState(event.sessionId)
+    const state = readTask(event.sessionId, event.cwd, event.filePath)
     if (state.rush || state.trivial) return { type: 'noop' }
     if (state.level !== 2 && state.level !== 3) return { type: 'noop' }
     if (state.handoverBlocked) return { type: 'noop' }
@@ -29,7 +29,7 @@ export function handover(event: NormalizedEvent): NormalizedDecision {
       if (!project.testCommand || suiteIsRed(project.testCommand, project.path)) {
         return { type: 'noop' }
       }
-      writeState({ ...state, handoverBlocked: true })
+      writeTask(event.sessionId, event.cwd, { handoverBlocked: true }, event.filePath)
       return {
         type: 'block',
         reason: [
@@ -43,7 +43,7 @@ export function handover(event: NormalizedEvent): NormalizedDecision {
     // Nothing was written yet, so there is nothing to hand over.
     if (state.editsSincePrediction === 0) return { type: 'noop' }
 
-    writeState({ ...state, handoverBlocked: true })
+    writeTask(event.sessionId, event.cwd, { handoverBlocked: true }, event.filePath)
     return {
       type: 'block',
       reason: [

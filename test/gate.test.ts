@@ -159,3 +159,70 @@ describe('gate', () => {
     expect(['allow', 'deny']).toContain((await run({})).type)
   })
 })
+
+describe('with a plan', () => {
+  it('gates the active step and keeps the prediction across sessions', async () => {
+    config([project])
+    const { makePlan, writePlan } = await import('../src/core/plan.js')
+    const { writeTask } = await import('../src/core/task-state.js')
+    writePlan(project, makePlan('t', ['step one', 'step two']))
+
+    expect((await run({})).type).toBe('deny')
+
+    writeTask('s1', project, { level: 1, predicted: true })
+    expect((await run({})).type).toBe('allow')
+
+    // A new session, the same step: the prediction is still good.
+    expect((await run({ sessionId: 'a-totally-different-session' })).type).toBe('allow')
+  })
+
+  it('re-arms on the next step without waiting for silence', async () => {
+    config([project])
+    const { advance, makePlan, readPlan, writePlan } = await import('../src/core/plan.js')
+    const { writeTask } = await import('../src/core/task-state.js')
+    writePlan(project, makePlan('t', ['one', 'two']))
+    writeTask('s1', project, { level: 1, predicted: true })
+    expect((await run({})).type).toBe('allow')
+
+    writePlan(project, advance(readPlan(project)!))
+    expect((await run({})).type).toBe('deny')
+  })
+
+  it('records a test against the step, not the session', async () => {
+    config([project])
+    const { makePlan, readPlan, writePlan } = await import('../src/core/plan.js')
+    const { writeTask } = await import('../src/core/task-state.js')
+    writePlan(project, makePlan('t', ['one']))
+    writeTask('s1', project, { level: 2, predicted: true })
+
+    await run({ filePath: join(project, 'test', 'a.test.ts') })
+    expect(readPlan(project)!.steps[0]!.testWritten).toBe(true)
+  })
+
+  it('lets the step be the boundary, so silence does not reset it', async () => {
+    config([project])
+    const { makePlan, readPlan, writePlan } = await import('../src/core/plan.js')
+    const { writeTask } = await import('../src/core/task-state.js')
+    const { boundary } = await import('../src/hooks/boundary.js')
+    writePlan(project, makePlan('t', ['one']))
+    writeTask('s1', project, {
+      level: 1,
+      predicted: true,
+      predictedAt: '2020-01-01T00:00:00.000Z',
+    })
+
+    boundary({
+      kind: 'prompt',
+      agent: 'claude-code',
+      sessionId: 's1',
+      cwd: project,
+      prompt: 'something new',
+    } as never)
+
+    expect(readPlan(project)!.steps[0]!.predicted).toBe(true)
+    // The claim that matters: the gate is still open, because the step still holds the
+    // prediction. Asserting only on the plan file would pass even with the old boundary,
+    // which reset the session and left the plan alone by accident rather than on purpose.
+    expect((await run({})).type).toBe('allow')
+  })
+})

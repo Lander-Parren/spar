@@ -1,5 +1,5 @@
 import { loadConfig, trackedProject } from '../core/config.js'
-import { readState, resetTask, writeState } from '../core/store.js'
+import { readTask, resetTaskState, writeTask } from '../core/task-state.js'
 import { clearProposals } from '../core/proposals.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 import type { SessionState } from '../core/types.js'
@@ -19,12 +19,15 @@ export function boundary(event: NormalizedEvent): NormalizedDecision {
     const config = loadConfig()
     if (!trackedProject(event.cwd, config)) return { type: 'noop' }
 
-    const state = readState(event.sessionId)
-    const prompt = event.prompt ?? ''
+    const state = readTask(event.sessionId, event.cwd)
+    // With a plan, the step says where the task ends. Silence says nothing, so an idle
+    // stretch must not throw away a prediction the step is still holding.
+    if (state.fromPlan) return { type: 'noop' }
 
     if (isNewTask(state, config.idleMinutes * 60_000)) {
       clearProposals(event.sessionId)
-      writeState({ ...resetTask(state), taskPrompt: prompt })
+      resetTaskState(event.sessionId, event.cwd)
+      writeTask(event.sessionId, event.cwd, { taskPrompt: event.prompt ?? '' })
     }
     return { type: 'noop' }
   } catch {
@@ -49,7 +52,11 @@ export function boundary(event: NormalizedEvent): NormalizedDecision {
  * The threshold is one number in config, so it can be corrected later from what
  * `/spar:stats` shows about how often you overrode the gate — evidence, not taste.
  */
-export function isNewTask(state: SessionState, idleMs: number, now = Date.now()): boolean {
+export function isNewTask(
+  state: Pick<SessionState, 'predicted' | 'predictedAt'>,
+  idleMs: number,
+  now = Date.now(),
+): boolean {
   // Nothing predicted yet: the gate is already armed, nothing to decide.
   if (!state.predicted || !state.predictedAt) return true
 

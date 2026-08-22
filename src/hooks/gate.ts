@@ -1,6 +1,6 @@
 import { loadConfig, trackedFor, trackedProject } from '../core/config.js'
 import { writeTargets } from '../core/shell-writes.js'
-import { readState, touchTask, writeState } from '../core/store.js'
+import { readTask, writeTask } from '../core/task-state.js'
 import { isTestPath } from '../core/test-paths.js'
 import { GUIDE } from '../core/guide.js'
 import { LEVEL_NAMES } from '../core/types.js'
@@ -40,7 +40,7 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     // Neither is tracked: the inert guarantee. A fresh install does nothing.
     if (!project) return { type: 'allow' }
 
-    let state = readState(event.sessionId)
+    let state = readTask(event.sessionId, event.cwd, event.filePath)
     if (state.rush) return { type: 'allow' }
     if (state.trivial) return { type: 'allow' }
 
@@ -68,11 +68,9 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     // At every level, a test being written is worth remembering: handover checks that
     // the user was left something to measure themselves against.
     if (targets.length > 0 && targets.every(isTestPath)) {
-      // Keep the local copy in step: touchTask below writes state back, and handing it a
-      // stale object would erase the flag we just set.
       if (!state.testWritten) {
         state = { ...state, testWritten: true }
-        writeState(state)
+        writeTask(event.sessionId, event.cwd, { testWritten: true }, event.filePath)
       }
       // At level 3 the agent writes the test and nothing else. The test is the brief;
       // the implementation is the user's.
@@ -111,7 +109,15 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
 
     // Level 2 is allowed through here; the skeleton check verifies it after the write.
     // Touching keeps this task alive so the boundary measures silence, not age.
-    touchTask(state)
+    writeTask(
+      event.sessionId,
+      event.cwd,
+      {
+        predictedAt: new Date().toISOString(),
+        editsSincePrediction: state.editsSincePrediction + 1,
+      },
+      event.filePath,
+    )
     return { type: 'allow' }
   } catch {
     // Fail open, always.
