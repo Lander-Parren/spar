@@ -95,22 +95,3 @@ export function resetTask(state: SessionState): SessionState {
     handoverBlocked: false,
   }
 }
-
-/**
- * Mark the current task as still active.
- *
- * Called by the gate on every write it lets through. This is what turns the task
- * boundary from "time since you predicted" into "time since anything happened" —
- * without it, a long task would be interrupted mid-flow.
- */
-export function touchTask(state: SessionState): void {
-  try {
-    writeState({
-      ...state,
-      predictedAt: new Date().toISOString(),
-      editsSincePrediction: state.editsSincePrediction + 1,
-    })
-  } catch {
-    // Keeping the clock warm is a nicety; never let it block a write.
-  }
-}

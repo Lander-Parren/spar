@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { loadConfig, trackedFor } from '../core/config.js'
 import { writeTargets } from '../core/shell-writes.js'
-import { readState } from '../core/store.js'
+import { readTask } from '../core/task-state.js'
 import { addProposal, readProposals } from '../core/proposals.js'
 import type { NormalizedDecision, NormalizedEvent } from '../adapters/types.js'
 
@@ -33,7 +33,7 @@ export function skeleton(event: NormalizedEvent): NormalizedDecision {
     const config = loadConfig()
     if (!trackedFor(event.cwd, event.filePath, config)) return { type: 'noop' }
 
-    const state = readState(event.sessionId)
+    const state = readTask(event.sessionId, event.cwd, event.filePath)
     if (state.level !== 2 || state.trivial || state.rush) return { type: 'noop' }
 
     // A shell write names its target inside the command, not in a file_path field.

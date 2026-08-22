@@ -191,6 +191,30 @@ more than three distinct roles, so if it will not render, the answer is two card
 than a bigger one. Colour marks what something is, never which step it is: writing
 `--step "you:You predict"` keeps `you` the same colour on every card you ever make.
 
+## Working through a plan
+
+When a ticket is broken into steps, record them so each one is gated on its own:
+
+```
+spar plan --title "<ticket>" --step "..." --step "..."
+spar plan --from <the plan file you already wrote>
+```
+
+While a plan is active the step is the task, so the questions come once per step rather
+than once per stretch of silence, and each step gets its own level from the gap log. The
+step that touches something the user has open gaps on will ask more of them than the one
+that adds a field.
+
+Finish a step with `spar step done`. At level 2 or 3 it refuses while no test exists, for
+the same reason the handover does.
+
+One prediction per step is the point. A whole ticket is too big to answer the third
+question about: "where will this go wrong" is answerable for "add the cancel endpoint" and
+is a guess for "implement cancellation with refunds and audit logging".
+
+Run the spar commands from inside the project. That is where the plan lives, and it is the
+directory the gate matched on. If you must run them from elsewhere, pass `--cwd <project>`.
+
 ## Honesty rules
 
 - Never ask the questions and then answer them in the same message.

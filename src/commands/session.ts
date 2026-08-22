@@ -1,4 +1,5 @@
-import { readGaps, readState, resetTask, writeState } from '../core/store.js'
+import { readGaps } from '../core/store.js'
+import { readTask, resetTaskState, writeTask } from '../core/task-state.js'
 import { NO_IDEA, suggestLevel } from '../core/level.js'
 import { LEVEL_NAMES, type Level } from '../core/types.js'
 import { readFocus } from '../core/focus.js'
@@ -6,8 +7,12 @@ import { clearProposals } from '../core/proposals.js'
 import { appendEvent } from '../core/events.js'
 
 /** `spar suggest-level` — ask the gap log how hard this task should be. */
-export function cmdSuggestLevel(sessionId: string, concepts: string[]): number {
-  const state = readState(sessionId)
+export function cmdSuggestLevel(
+  sessionId: string,
+  concepts: string[],
+  cwd: string = process.cwd(),
+): number {
+  const state = readTask(sessionId, cwd)
   const suggestion = suggestLevel({
     concepts,
     gaps: readGaps(),
@@ -18,18 +23,20 @@ export function cmdSuggestLevel(sessionId: string, concepts: string[]): number {
     `level ${suggestion.level} (${LEVEL_NAMES[suggestion.level]}) — ${suggestion.reason}`,
   )
   // Recorded, not committed: the user still gets to override before predicting.
-  writeState({ ...state, level: suggestion.level })
+  // With a plan this lands on the active step, which is what gives each step its own
+  // level instead of one level averaged over a whole ticket.
+  writeTask(sessionId, cwd, { level: suggestion.level })
   appendEvent({ type: 'suggest', session: sessionId, level: suggestion.level, concepts })
   return 0
 }
 
 /** `spar level` — the user overrides the suggestion. */
-export function cmdLevel(sessionId: string, level: Level): number {
-  const state = readState(sessionId)
+export function cmdLevel(sessionId: string, level: Level, cwd: string = process.cwd()): number {
+  const state = readTask(sessionId, cwd)
   // Counted, because a user who constantly corrects the suggestion is telling you the
   // thresholds are wrong — that is a fact about the design, not about them.
   appendEvent({ type: 'override', session: sessionId, from: state.level, to: level })
-  writeState({ ...state, level })
+  writeTask(sessionId, cwd, { level })
   console.log(`level set to ${level} (${LEVEL_NAMES[level]})`)
   return 0
 }
@@ -38,15 +45,15 @@ export function cmdLevel(sessionId: string, level: Level): number {
 export function cmdPredict(
   sessionId: string,
   answers: { q1?: string; q2?: string; q3?: string },
+  cwd: string = process.cwd(),
 ): number {
-  const state = readState(sessionId)
+  const state = readTask(sessionId, cwd)
   const normalized = {
     q1: normalizeAnswer(answers.q1),
     q2: normalizeAnswer(answers.q2),
     q3: normalizeAnswer(answers.q3),
   }
-  writeState({
-    ...state,
+  writeTask(sessionId, cwd, {
     predicted: true,
     predictedAt: new Date().toISOString(),
     editsSincePrediction: 0,
@@ -69,19 +76,18 @@ export function cmdPredict(
 }
 
 /** `spar mark --trivial` — the agent judged this change not worth gating. */
-export function cmdMarkTrivial(sessionId: string): number {
-  const state = readState(sessionId)
+export function cmdMarkTrivial(sessionId: string, cwd: string = process.cwd()): number {
+  const state = readTask(sessionId, cwd)
   appendEvent({ type: 'trivial', session: sessionId })
-  writeState({ ...state, trivial: true, level: state.level ?? 0 })
+  writeTask(sessionId, cwd, { trivial: true, level: state.level ?? 0 })
   console.log('marked trivial for this task')
   return 0
 }
 
 /** `spar rush` — degrade to level 0 for the rest of the session. Never off, only down. */
-export function cmdRush(sessionId: string, off: boolean): number {
-  const state = readState(sessionId)
+export function cmdRush(sessionId: string, off: boolean, cwd: string = process.cwd()): number {
   appendEvent({ type: 'rush', session: sessionId, on: !off })
-  writeState({ ...state, rush: !off })
+  writeTask(sessionId, cwd, { rush: !off })
   console.log(off ? 'rush mode off' : 'rush mode on for this session')
   return 0
 }
@@ -93,9 +99,9 @@ function normalizeAnswer(answer: string | undefined): string {
 }
 
 /** `spar next` — say out loud that this is new work, without waiting for the idle timer. */
-export function cmdNext(sessionId: string): number {
+export function cmdNext(sessionId: string, cwd: string = process.cwd()): number {
   clearProposals(sessionId)
-  writeState(resetTask(readState(sessionId)))
+  resetTaskState(sessionId, cwd)
   console.log('new task — the gate will ask again on the next write')
   return 0
 }

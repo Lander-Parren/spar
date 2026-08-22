@@ -1,6 +1,27 @@
-import { resolve } from 'node:path'
+import { appendFileSync, existsSync, readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { loadConfig, saveConfig } from '../core/config.js'
 import { paths } from '../core/paths.js'
+
+/**
+ * Keep `.spar/` out of the project's history.
+ *
+ * The plan belongs to the project but not to its pull requests: it changes constantly
+ * and it is one person's working state. A team that wants to share it can delete this
+ * line. Never fatal, because failing to write someone else's .gitignore must not be the
+ * reason setup fails.
+ */
+function ignoreSparDir(root: string): void {
+  try {
+    const file = join(root, '.gitignore')
+    const existing = existsSync(file) ? readFileSync(file, 'utf8') : ''
+    if (/^\.spar\/?$/m.test(existing)) return
+    const prefix = existing.length > 0 && !existing.endsWith('\n') ? '\n' : ''
+    appendFileSync(file, `${prefix}.spar/\n`, 'utf8')
+  } catch {
+    // Not worth failing setup over.
+  }
+}
 
 /** `spar setup --project <path>` — the one step that makes spar do anything at all. */
 export function cmdSetup(opts: {
@@ -15,6 +36,7 @@ export function cmdSetup(opts: {
 
   if (opts.project) {
     const path = resolve(opts.project)
+    ignoreSparDir(path)
     const existing = config.projects.find((p) => resolve(p.path) === path)
     if (existing) {
       if (opts.stack) existing.stack = opts.stack
