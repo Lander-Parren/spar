@@ -131,6 +131,20 @@ Good: `--model "the repository decides the transaction boundary"`
 Bad: `--model "they thought that maybe the repository..."` (framing, hedging)
 Bad: pasting the actual `PlaceOrderAsync` body (business logic, not a concept)
 
+## When to draw instead of write
+
+Reach for `spar card` when an explanation has three or more moving parts and would
+otherwise be a paragraph. Below that, prose is faster and clearer.
+
+```
+spar card --layout chain|fanout|sequence|compare --title "..." --subtitle "..."
+```
+
+One idea per card. The command refuses more than five steps, more than three bullets and
+more than three distinct roles, so if it will not render, the answer is two cards rather
+than a bigger one. Colour marks what something is, never which step it is: writing
+`--step "you:You predict"` keeps `you` the same colour on every card you ever make.
+
 ## Honesty rules
 
 - Never ask the questions and then answer them in the same message.

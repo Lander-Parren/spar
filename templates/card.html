@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: {{BG}}; }
+  body { color: {{INK}}; padding: 3.5rem 2rem 3rem;
+         font: 400 17px/1.6 ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         -webkit-font-smoothing: antialiased; }
+  .card { max-width: 1120px; margin: 0 auto; }
+  h1 { margin: 0; font-size: clamp(2rem, 4.4vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; }
+  .sub { margin: 0.7rem 0 0; font-size: clamp(1rem, 1.7vw, 1.28rem); color: {{MUTED}}; }
+  svg { display: block; width: 100%; height: auto; margin: 1.6rem 0 0; }
+  ul { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+  li { display: flex; align-items: baseline; gap: 0.85rem; margin-bottom: 0.85rem; font-size: clamp(1rem, 1.65vw, 1.22rem); }
+  li i { flex: none; width: 11px; height: 11px; border-radius: 50%; transform: translateY(-1px); }
+  li span { color: {{MUTED}}; }
+  .close { margin: 1.9rem 0 0; color: {{MUTED}}; font-size: clamp(1rem, 1.6vw, 1.18rem); }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>{{TITLE}}</h1>
+  <p class="sub">{{SUBTITLE}}</p>
+  {{SVG}}
+  {{BULLETS}}
+  {{CLOSE}}
+</div>
+</body>
+</html>

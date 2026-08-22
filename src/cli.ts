@@ -15,6 +15,7 @@ import { cmdReview } from './commands/review.js'
 import { cmdStats } from './commands/stats.js'
 import { cmdDashboard } from './commands/dashboard.js'
 import { cmdFocus } from './commands/focus.js'
+import { cmdCard } from './commands/card.js'
 import { cmdInstall } from './commands/install.js'
 import { cmdEmit } from './commands/emit.js'
 import { cmdSetup } from './commands/setup.js'
@@ -35,6 +36,7 @@ const HELP = `spar — keep learning while AI writes the code
   spar review --session <id> <gap-id> [--ok | --nok]
   spar stats [--json]
   spar dashboard [--no-open]
+  spar card --layout chain|fanout|sequence|compare --title <t> --subtitle <s> [...]
   spar focus ["<concept>" ...] [--clear]
   spar log --session <id> --concept <c> --model <what you thought> --reality <what was true>
            [--kind misconception|typo-bug|improvement] [--question 1|2|3]
@@ -89,6 +91,24 @@ async function main(): Promise<number> {
       return cmdStats(flags.bool('json'))
     case 'dashboard':
       return cmdDashboard(!flags.bool('no-open'))
+    case 'card':
+      return cmdCard({
+        layout: flags.string('layout') ?? '',
+        title: required(flags.string('title'), '--title'),
+        subtitle: required(flags.string('subtitle'), '--subtitle'),
+        bullets: flags.all('bullet'),
+        close: flags.string('close'),
+        steps: flags.all('step'),
+        loop: flags.string('loop'),
+        from: flags.string('from'),
+        to: flags.all('to'),
+        via: flags.string('via'),
+        actors: flags.all('actor'),
+        messages: flags.all('msg'),
+        panes: flags.all('card-pane'),
+        out: flags.string('out'),
+        open: !flags.bool('no-open'),
+      })
     case 'focus':
       return cmdFocus(flags.positional, flags.bool('clear'))
     case 'propose':
