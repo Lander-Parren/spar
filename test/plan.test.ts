@@ -8,6 +8,7 @@ import {
   clearPlan,
   isComplete,
   makePlan,
+  parseSteps,
   planPath,
   readPlan,
   writePlan,
@@ -103,5 +104,36 @@ describe('storage', () => {
     clearPlan(root)
     expect(existsSync(planPath(root))).toBe(false)
     expect(() => clearPlan(root)).not.toThrow()
+  })
+})
+
+describe('parseSteps', () => {
+  it('reads the task headings a superpowers plan produces', () => {
+    const md = [
+      '# Something Implementation Plan',
+      '## Global Constraints',
+      '### Task 1: The plan model',
+      'body',
+      '### Task 2: Reading steps',
+      '- [ ] **Step 1: Write the failing test**',
+      '### Task 3: The accessor',
+    ].join('\n')
+    expect(parseSteps(md)).toEqual(['The plan model', 'Reading steps', 'The accessor'])
+  })
+
+  it('reads two-hash task headings as well', () => {
+    expect(parseSteps('## Task 1: One\n## Task 2: Two')).toEqual(['One', 'Two'])
+  })
+
+  it('copes with a heading that has no colon', () => {
+    expect(parseSteps('### Task 1 do the thing')).toEqual(['do the thing'])
+  })
+
+  it('ignores headings that are not tasks', () => {
+    expect(parseSteps('## Global Constraints\n## Testing\n### Task 1: Real')).toEqual(['Real'])
+  })
+
+  it('returns nothing for a file with no tasks, so the caller can say so', () => {
+    expect(parseSteps('# Just a document\n\nsome prose')).toEqual([])
   })
 })

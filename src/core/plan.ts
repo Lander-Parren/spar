@@ -88,3 +88,20 @@ export function advance(plan: Plan): Plan {
   steps[next]!.status = 'active'
   return { ...plan, steps, current: next }
 }
+
+/**
+ * Step titles out of a markdown plan.
+ *
+ * Matches the `## Task` and `### Task` headings that superpowers writing-plans and the
+ * OMC planners produce. Anything else is left alone: this is a convenience in front of
+ * the same entrance as --step, not a second way in, so a format it does not know yields
+ * nothing and the caller says so.
+ */
+export function parseSteps(markdown: string): string[] {
+  const titles: string[] = []
+  for (const line of markdown.split('\n')) {
+    const heading = /^#{2,3}\s+Task\s*\d*\s*[:.-]?\s*(.+?)\s*$/i.exec(line)
+    if (heading?.[1]) titles.push(heading[1])
+  }
+  return titles
+}
