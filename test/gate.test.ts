@@ -54,6 +54,20 @@ describe('gate', () => {
     if (decision.type === 'deny') expect(decision.agentMessage).toContain('spar suggest-level')
   })
 
+  it('fires when the file is in a tracked project, wherever the agent was started', async () => {
+    config([project])
+    const decision = await run({ cwd: tmpdir(), filePath: join(project, 'src', 'a.cs') })
+    expect(decision.type).toBe('deny')
+  })
+
+  it('stays silent when neither the working directory nor the file is tracked', async () => {
+    config([project])
+    const elsewhere = mkdtempSync(join(tmpdir(), 'spar-other-'))
+    const decision = await run({ cwd: elsewhere, filePath: join(elsewhere, 'a.cs') })
+    expect(decision.type).toBe('allow')
+    rmSync(elsewhere, { recursive: true, force: true })
+  })
+
   it('allows non-write tools through untouched', async () => {
     config([project])
     expect((await run({ toolName: 'Read' })).type).toBe('allow')
