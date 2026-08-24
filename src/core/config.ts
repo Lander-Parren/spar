@@ -14,6 +14,13 @@ export function loadConfig(): Config {
     const parsed = JSON.parse(raw) as Partial<Config>
     return {
       projects: Array.isArray(parsed.projects) ? parsed.projects.filter(isProject) : [],
+      // An unreadable value, or none at all, means dormant. An upgrade from 0.4.x has no
+      // activation key, and defaulting that to `always` would keep gating someone who
+      // never asked for it; defaulting it to `skill` only ever removes friction.
+      activation:
+        parsed.activation === 'always' || parsed.activation === 'skill'
+          ? parsed.activation
+          : DEFAULT_CONFIG.activation,
       language: typeof parsed.language === 'string' ? parsed.language : DEFAULT_CONFIG.language,
       focusDays:
         typeof parsed.focusDays === 'number' && parsed.focusDays > 0

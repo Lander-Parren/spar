@@ -2,7 +2,7 @@
 name: spar
 description: Make the user predict before you implement, then show them where their model was wrong and log the gap. Use whenever you are about to write or edit source code in a project the user is learning, such as adding an endpoint, service, data model, migration, background job, or wiring up a dependency. Also use when the user says "spar", asks to be quizzed before you code, mentions predicting before implementing, wants to stop passively accepting AI output, or says they are not learning anything from a codebase.
 license: MIT
-compatibility: Works on its own. The optional `spar` CLI (npm i -g spar-agent) adds levels, spaced repetition, stats and a dashboard; its MCP server exposes the same as tools. Enforcement needs hooks, available in Claude Code and Cursor.
+compatibility: Works on its own. The optional `spar` CLI (npm i -g spar-agent) adds levels, spaced repetition, stats and a dashboard; its MCP server exposes the same as tools. Enforcement needs hooks, available in Claude Code and Cursor, and starts when this skill runs `spar on`.
 allowed-tools: Bash(spar:*) Read
 metadata:
   author: landerparren
@@ -28,19 +28,28 @@ anything crossing a layer boundary. See `references/triviality.md` when unsure.
 
 If it is trivial and the CLI is present, run `spar mark --session <id> --trivial`
 and carry on. Do not silently skip the judgement. It is recorded either way, so that
-the ratio of "trivial" calls stays visible.
+the ratio of "trivial" calls stays visible. That holds even with the gate dormant and
+nothing to get past: the record is the point, and a run of trivial calls is how you find
+out the tool is being talked out of its job.
 
 ## The loop
 
-**1. Name the concepts.** Say what this change actually touches, in one to three general terms
+**1. Turn spar on.** `spar on`. Add `--session <id>` if the CLI asks for one. Nothing below
+this line is enforced until you do: spar ships dormant, so the gate lets every write
+through until a session says otherwise, and the loop would be yours to abandon at the
+first inconvenient moment. It stays on for the rest of the session, which is deliberate,
+because the tasks that follow the one you were asked about deserve the same treatment.
+`spar off` when the user has had enough.
+
+**2. Name the concepts.** Say what this change actually touches, in one to three general terms
 that would be recognisable outside this codebase: "transaction boundaries in an ORM",
 not "the OrdersController fix".
 
-**2. Get a level.** `spar suggest-level --session <id> --concept "<concept>"`.
+**3. Get a level.** `spar suggest-level --session <id> --concept "<concept>"`.
 Report it to the user *with its reason*. The reason is the point. They may override
 with `spar level --session <id> <0-3>`. Without the CLI, use level 1.
 
-**3. Ask the three questions.** Ask all three in one message, in the user's language,
+**4. Ask the three questions.** Ask all three in one message, in the user's language,
 and wait. Do not answer them yourself and do not hint.
 
 > 1. Where does this belong, and why there?
@@ -53,12 +62,12 @@ verbatim; never coach the user into a guess, and never make them feel behind for
 
 Record with `spar predict --session <id> --q1 "..." --q2 "..." --q3 "..."`.
 
-**4. Act according to the level.**
+**5. Act according to the level.**
 
 | Level | What you do |
 |---|---|
 | 0 rush | Implement normally. Afterwards, ask one 30-second question about a real decision point you hit. |
-| 1 standard | Implement normally, then do step 5. |
+| 1 standard | Implement normally, then do step 6. |
 | 2 skeleton | Write signatures, imports, wiring, **and a test that fails**. Leave every line that carries the decision as `TODO(spar: <precise instruction>)`. The user writes those five to ten lines. Then stop and wait. |
 | 3 transcript | **Write the test file and nothing else.** Deliver the implementation in chat with enough explanation to place it: which file, where in it, why there. Record it, then stop and wait. |
 
@@ -88,7 +97,7 @@ worthless.
 When the user says they are done, run `spar done --session <id>`. It prints the actual
 diff between what was proposed and what is on disk.
 
-**5. Show the difference.** Not a verdict, a comparison. At levels 2 and 3 work from
+**6. Show the difference.** Not a verdict, a comparison. At levels 2 and 3 work from
 the diff `spar done` prints; at level 1 compare against the prediction directly:
 
 - Where their prediction held. Say so explicitly; calibration runs both ways.
@@ -98,7 +107,7 @@ the diff `spar done` prints; at level 1 compare against the prediction directly:
 - Whether their approach would also have worked. It often would. Say so when it is
   true; it is half of getting their confidence back.
 
-**6. Log each divergence.**
+**7. Log each divergence.**
 
 ```
 spar log --session <id> --concept "<general concept>" \
@@ -222,7 +231,7 @@ directory the gate matched on. If you must run them from elsewhere, pass `--cwd 
 ## Writing the explanation
 
 Everything above ends as prose somebody reads while they are still confused: the
-difference at step 5, the question when a gap comes back, the words on a card. Write it
+difference at step 6, the question when a gap comes back, the words on a card. Write it
 the way you would say it out loud to one person.
 
 No em dashes and no en dashes. A period, a comma or a colon does the same work without

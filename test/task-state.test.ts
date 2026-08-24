@@ -81,6 +81,14 @@ describe('with a plan', () => {
     expect(readTask('another-session', project).rush).toBe(false)
   })
 
+  it('keeps engaged in the session too, for the same reason as rush', () => {
+    writeTask('s1', project, { engaged: true })
+    expect(readTask('s1', project).engaged).toBe(true)
+    expect(readPlan(project)!.steps[0]!).not.toHaveProperty('engaged')
+    resetTaskState('s1', project)
+    expect(readTask('s1', project).engaged).toBe(true)
+  })
+
   it('matches by target file too, so a parent cwd still finds the plan', () => {
     writeTask('s1', join(project, '..'), { level: 1 }, join(project, 'src', 'a.ts'))
     expect(readPlan(project)!.steps[0]!.level).toBe(1)

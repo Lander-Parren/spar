@@ -1,3 +1,4 @@
+import { loadConfig, trackedProject } from '../core/config.js'
 import { readGaps } from '../core/store.js'
 import { readTask, resetTaskState, writeTask } from '../core/task-state.js'
 import { NO_IDEA, suggestLevel } from '../core/level.js'
@@ -89,6 +90,30 @@ export function cmdRush(sessionId: string, off: boolean, cwd: string = process.c
   appendEvent({ type: 'rush', session: sessionId, on: !off })
   writeTask(sessionId, cwd, { rush: !off })
   console.log(off ? 'rush mode off' : 'rush mode on for this session')
+  return 0
+}
+
+/**
+ * `spar on` and `spar off`. The session asks to be gated, or asks to be left alone.
+ *
+ * With `activation: skill` this is the only thing that wakes the gate, and the spar skill
+ * runs it first. Session-scoped rather than per task, because invoking the skill says
+ * something about the sitting, not about one edit: the tasks that follow get gated too.
+ */
+export function cmdEngage(sessionId: string, on: boolean, cwd: string = process.cwd()): number {
+  appendEvent({ type: 'engage', session: sessionId, on })
+  writeTask(sessionId, cwd, { engaged: on })
+  if (!on) {
+    console.log('spar is off for this session')
+    return 0
+  }
+  console.log('spar is on for this session. The gate will ask on the next write')
+  // Armed in a directory spar was never pointed at looks exactly like the inert
+  // guarantee working as designed, and there is no way to tell the two apart from here.
+  if (!trackedProject(cwd, loadConfig())) {
+    console.log(`  ${cwd} is not a tracked project, so nothing there will be gated yet`)
+    console.log('  spar setup --project <path>')
+  }
   return 0
 }
 

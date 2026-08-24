@@ -50,6 +50,10 @@ export function gate(event: NormalizedEvent): NormalizedDecision {
     if (!project) return { type: 'allow' }
 
     let state = readTask(event.sessionId, event.cwd, subject)
+    // Dormant unless this session said otherwise. The skill says so on its first step,
+    // so spar asks for a prediction when you came looking for one and stays quiet when
+    // you did not. `spar activation always` restores the unconditional gate.
+    if (config.activation === 'skill' && !state.engaged) return { type: 'allow' }
     if (state.rush) return { type: 'allow' }
     if (state.trivial) return { type: 'allow' }
 

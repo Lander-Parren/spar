@@ -35,6 +35,9 @@ export interface Gap {
   misses: number
 }
 
+/** Whether the gate may fire at all, and on whose say-so. */
+export type Activation = 'skill' | 'always'
+
 export interface ProjectConfig {
   path: string
   /** Free-form hint used when naming concepts, e.g. ".NET", "Kotlin". */
@@ -49,6 +52,14 @@ export interface ProjectConfig {
 
 export interface Config {
   projects: ProjectConfig[]
+  /**
+   * When the gate is allowed to fire.
+   *
+   * `skill` keeps spar dormant until something in the session turns it on, which is the
+   * spar skill's first step. `always` gates every write in a tracked project, which is
+   * how spar behaved before 0.5.0 and is one command away: `spar activation always`.
+   */
+  activation: Activation
   /** Language for the three questions and the gap log. Not the CLI's own output. */
   language: string
   focusDays: number
@@ -60,6 +71,7 @@ export interface Config {
 
 export const DEFAULT_CONFIG: Config = {
   projects: [],
+  activation: 'skill',
   language: 'en',
   focusDays: 14,
   idleMinutes: 30,
@@ -75,6 +87,14 @@ export interface SessionState {
   predicted: boolean
   /** Rush flag persists for the whole session, not just the task. */
   rush: boolean
+  /**
+   * Something turned spar on for this session, normally the skill's first step.
+   *
+   * Session-scoped like rush, and for the same reason: a task boundary must never stand
+   * spar down, or the second task of a session would go ungated without anyone saying so.
+   * Only consulted when `activation` is `skill`.
+   */
+  engaged: boolean
   /** Set when the agent judged the current task trivial. */
   trivial: boolean
   /** ISO timestamp of the last recorded prediction. Lets the boundary use elapsed time. */
@@ -99,7 +119,7 @@ export interface SessionState {
 
 export function emptyState(sessionId: string): SessionState {
   return {
-    sessionId, predicted: false, rush: false, trivial: false,
+    sessionId, predicted: false, rush: false, engaged: false, trivial: false,
     editsSincePrediction: 0, testWritten: false,
   }
 }

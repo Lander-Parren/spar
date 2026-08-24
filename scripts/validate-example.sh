@@ -62,6 +62,17 @@ check "~/.spar is not even created"              absent "$([ -d "$SPAR_HOME" ] &
 
 $CLI setup --project "$PROJECT" --stack TypeScript >/dev/null
 
+# The gate now waits to be asked. Everything below this section is about what the gate
+# does once it is on, so this is the one place that proves it starts off.
+section "dormant until the session turns it on"
+check "silent in a named project"                allow "$(gate "$PROJECT" "$FILE")"
+$CLI on --session s1 >/dev/null
+check "gates once spar is on"                    deny  "$(gate "$PROJECT" "$FILE")"
+$CLI off --session s1 >/dev/null
+check "stands down again on spar off"            allow "$(gate "$PROJECT" "$FILE")"
+$CLI activation always >/dev/null
+check "activation always needs no invitation"    deny  "$(gate "$PROJECT" "$FILE")"
+
 section "the gate"
 check "fires on the first write"                 deny  "$(gate "$PROJECT" "$FILE")"
 check "fires from a parent directory too"        deny  "$(gate "$SANDBOX" "$FILE")"

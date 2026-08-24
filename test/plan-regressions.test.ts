@@ -17,7 +17,7 @@ beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), 'spar-home-'))
   project = mkdtempSync(join(tmpdir(), 'spar-proj-'))
   process.env.SPAR_HOME = home
-  writeFileSync(join(home, 'config.json'), JSON.stringify({ projects: [{ path: project }] }))
+  writeFileSync(join(home, 'config.json'), JSON.stringify({ activation: 'always', projects: [{ path: project }] }))
 })
 afterEach(() => {
   rmSync(home, { recursive: true, force: true })

@@ -17,6 +17,7 @@ export type SparEvent =
   | { ts: string; type: 'override'; session: string; from?: Level; to: Level }
   | { ts: string; type: 'trivial'; session: string }
   | { ts: string; type: 'rush'; session: string; on: boolean }
+  | { ts: string; type: 'engage'; session: string; on: boolean }
   | { ts: string; type: 'review'; session: string; gap: string; correct: boolean }
 
 /**

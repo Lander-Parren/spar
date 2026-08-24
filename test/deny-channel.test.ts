@@ -61,7 +61,7 @@ describe('a shell write is gated by the file it writes', () => {
     project = mkdtempSync(join(tmpdir(), 'spar-proj-'))
     outside = mkdtempSync(join(tmpdir(), 'spar-out-'))
     process.env.SPAR_HOME = home
-    writeFileSync(join(home, 'config.json'), JSON.stringify({ projects: [{ path: project }] }))
+    writeFileSync(join(home, 'config.json'), JSON.stringify({ activation: 'always', projects: [{ path: project }] }))
   })
   afterEach(() => {
     for (const d of [home, project, outside]) rmSync(d, { recursive: true, force: true })
@@ -110,7 +110,7 @@ describe('a symlinked directory inside a project cannot hide a write', () => {
     project = mkdtempSync(join(tmpdir(), 'spar-proj-'))
     elsewhere = mkdtempSync(join(tmpdir(), 'spar-vendor-'))
     process.env.SPAR_HOME = home
-    writeFileSync(join(home, 'config.json'), JSON.stringify({ projects: [{ path: project }] }))
+    writeFileSync(join(home, 'config.json'), JSON.stringify({ activation: 'always', projects: [{ path: project }] }))
     symlinkSync(elsewhere, join(project, 'vendor'), 'dir')
   })
   afterEach(() => {

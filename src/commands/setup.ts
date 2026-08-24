@@ -2,6 +2,7 @@ import { appendFileSync, existsSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { loadConfig, saveConfig } from '../core/config.js'
 import { paths } from '../core/paths.js'
+import type { Activation } from '../core/types.js'
 
 function isDirectory(path: string): boolean {
   try {
@@ -33,6 +34,30 @@ export function ignoreSparDir(root: string): void {
   } catch {
     // Not worth failing setup over.
   }
+}
+
+function activationLine(activation: Activation): string {
+  return activation === 'always'
+    ? 'activation: always. Every write in a tracked project is gated'
+    : 'activation: skill. spar is dormant until a session turns it on with spar on'
+}
+
+/**
+ * `spar activation <skill|always>`. Who decides when the gate fires.
+ *
+ * Named separately from `spar on` because the two answer different questions: this one is
+ * the standing default for every session, that one is this session only.
+ */
+export function cmdActivation(value: string | undefined): number {
+  if (value !== 'skill' && value !== 'always') {
+    process.stderr.write('spar: activation must be skill or always. Nothing was saved.\n')
+    return 1
+  }
+  const config = loadConfig()
+  config.activation = value
+  saveConfig(config)
+  console.log(activationLine(value))
+  return 0
 }
 
 /** `spar setup --project <path>` — the one step that makes spar do anything at all. */
@@ -72,6 +97,7 @@ export function cmdSetup(opts: {
 
   console.log(`config: ${paths.config()}`)
   console.log(`language: ${config.language}`)
+  console.log(activationLine(config.activation))
   if (config.projects.length === 0) {
     console.log('projects: none. spar is inert until you add one')
     console.log('  spar setup --project /path/to/repo --stack ".NET"')

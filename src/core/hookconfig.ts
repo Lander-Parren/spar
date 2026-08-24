@@ -82,7 +82,7 @@ export function hooksFile(agent: AgentName): Record<string, unknown> {
   return agent === 'claude-code'
     ? {
         description:
-          "spar: predict before you're told. Inert until `spar setup --project <path>` names a project.",
+          "spar: predict before you're told. Inert until `spar setup --project <path>` names a project, and dormant in a session until `spar on` turns it on.",
         hooks,
       }
     : { version: 1, hooks }
