@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { runHook } from './commands/hook.js'
 import {
+  cmdEngage,
   cmdLevel,
   cmdMarkTrivial,
   cmdPredict,
@@ -19,7 +20,7 @@ import { cmdCard } from './commands/card.js'
 import { cmdGuide } from './commands/guide.js'
 import { cmdInstall } from './commands/install.js'
 import { cmdEmit } from './commands/emit.js'
-import { cmdSetup } from './commands/setup.js'
+import { cmdActivation, cmdSetup } from './commands/setup.js'
 import { cmdPlan } from './commands/plan.js'
 import { cmdStepDone } from './commands/step.js'
 import type { GapKind, Level } from './core/types.js'
@@ -28,6 +29,7 @@ const HELP = `spar: keep learning while AI writes the code
 
   spar install [--agent claude-code|cursor] [--dry-run]
   spar setup --project <path> [--stack <name>] [--language <code>] [--test-command <cmd>]
+  spar activation <skill|always>
   spar plan [--title <t>] [--step <s> ...] [--from <plan.md>] [--replace] [--clear]
   spar step done --session <id>
   spar suggest-level --session <id> --concept <c> [--concept <c> ...]
@@ -35,6 +37,8 @@ const HELP = `spar: keep learning while AI writes the code
   spar predict --session <id> [--q1 <a>] [--q2 <a>] [--q3 <a>]
   spar mark --session <id> --trivial
   spar rush --session <id> [--off]
+  spar on [--session <id>]                                (the skill turns the gate on)
+  spar off [--session <id>]
   spar done --session <id>
   spar next --session <id>
   spar propose --session <id> --file <path> [--text <content>]   (or pipe on stdin)
@@ -51,6 +55,7 @@ const HELP = `spar: keep learning while AI writes the code
   spar mcp                                                (MCP server on stdio)
 
   (any session command also takes --cwd <path> when it is not run inside the project)
+  (--session is optional in Claude Code, which exports the id the hooks see)
 
 Levels: 0 rush · 1 standard · 2 skeleton · 3 transcript
 `
@@ -73,6 +78,8 @@ async function main(): Promise<number> {
       const { runMcpServer } = await import('./mcp/server.js')
       return runMcpServer()
     }
+    case 'activation':
+      return cmdActivation(flags.positional[0])
     case 'setup':
       return cmdSetup({
         project: flags.string('project'),
@@ -152,6 +159,10 @@ async function main(): Promise<number> {
       return cmdMarkTrivial(requireSession(flags), cwdOf(flags))
     case 'rush':
       return cmdRush(requireSession(flags), flags.bool('off'), cwdOf(flags))
+    case 'on':
+      return cmdEngage(requireSession(flags), true, cwdOf(flags))
+    case 'off':
+      return cmdEngage(requireSession(flags), false, cwdOf(flags))
     case 'log':
       return cmdLog({
         sessionId: requireSession(flags),
@@ -207,8 +218,15 @@ function parseFlags(argv: string[]): Flags {
   }
 }
 
+/**
+ * The session this command is about.
+ *
+ * Claude Code exports the same id its hooks report, which is what lets the skill run
+ * `spar on` before anything has had a chance to tell it one. Elsewhere `--session` is
+ * still required: picking a session to write to by guessing would corrupt a real one.
+ */
 function requireSession(flags: Flags): string {
-  return required(flags.string('session'), '--session')
+  return required(flags.string('session') ?? process.env.CLAUDE_CODE_SESSION_ID, '--session')
 }
 
 /**

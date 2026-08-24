@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -18,8 +18,8 @@ afterEach(() => {
   delete process.env.SPAR_HOME
 })
 
-function config(projects: string[]) {
-  writeFileSync(join(home, 'config.json'), JSON.stringify({ projects: projects.map((p) => ({ path: p })) }))
+function config(projects: string[], activation: string = 'always') {
+  writeFileSync(join(home, 'config.json'), JSON.stringify({ activation, projects: projects.map((p) => ({ path: p })) }))
 }
 
 function state(sessionId: string, patch: Record<string, unknown>) {
@@ -224,5 +224,58 @@ describe('with a plan', () => {
     // prediction. Asserting only on the plan file would pass even with the old boundary,
     // which reset the session and left the plan alone by accident rather than on purpose.
     expect((await run({})).type).toBe('allow')
+  })
+})
+
+describe('waiting for the skill', () => {
+  it('stays out of the way in a tracked project until the session turns it on', async () => {
+    config([project], 'skill')
+    expect((await run({})).type).toBe('allow')
+  })
+
+  it('gates as usual once the session has turned it on', async () => {
+    config([project], 'skill')
+    state('s1', { engaged: true })
+    expect((await run({})).type).toBe('deny')
+  })
+
+  it('stays dormant for a shell write too, not only for a write tool', async () => {
+    config([project], 'skill')
+    const command = `cat > ${join(project, 'src', 'orders.ts')} <<'EOF'\nbody\nEOF`
+    expect((await run({ toolName: 'Bash', command })).type).toBe('allow')
+  })
+
+  it('reads dormant from a config written before the setting existed', async () => {
+    // A 0.4.x config has no activation key. Treating that as always-on would keep gating
+    // someone who upgraded and never asked to be gated.
+    writeFileSync(join(home, 'config.json'), JSON.stringify({ projects: [{ path: project }] }))
+    expect((await run({})).type).toBe('allow')
+  })
+
+  it('is what spar on and spar off actually do', async () => {
+    config([project], 'skill')
+    const { cmdEngage } = await import('../src/commands/session.js')
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    cmdEngage('s1', true, project)
+    expect((await run({})).type).toBe('deny')
+    cmdEngage('s1', false, project)
+    expect((await run({})).type).toBe('allow')
+
+    vi.restoreAllMocks()
+  })
+
+  it('leaves an engaged session engaged across a task boundary', async () => {
+    config([project], 'skill')
+    const { cmdEngage, cmdNext } = await import('../src/commands/session.js')
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    cmdEngage('s1', true, project)
+    // A new task must not stand spar down, or the second task of a sitting would go
+    // ungated without anyone having said so.
+    cmdNext('s1', project)
+    expect((await run({})).type).toBe('deny')
+
+    vi.restoreAllMocks()
   })
 })

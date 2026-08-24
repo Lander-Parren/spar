@@ -4,7 +4,14 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { makePlan, readPlan, writePlan } from '../src/core/plan.js'
 import { readState } from '../src/core/store.js'
-import { cmdLevel, cmdMarkTrivial, cmdNext, cmdPredict, cmdRush } from '../src/commands/session.js'
+import {
+  cmdEngage,
+  cmdLevel,
+  cmdMarkTrivial,
+  cmdNext,
+  cmdPredict,
+  cmdRush,
+} from '../src/commands/session.js'
 
 let home: string
 let project: string
@@ -53,6 +60,12 @@ describe('with a plan', () => {
     expect(step().trivial).toBeUndefined()
   })
 
+  it('keeps engaged in the session, like rush', () => {
+    cmdEngage('s1', true, project)
+    expect(readState('s1').engaged).toBe(true)
+    expect(step()).not.toHaveProperty('engaged')
+  })
+
   it('lets spar next start the step over', () => {
     cmdLevel('s1', 2, project)
     cmdPredict('s1', { q1: 'a' }, project)
@@ -69,5 +82,17 @@ describe('with no plan', () => {
     cmdLevel('s1', 2, project)
     cmdPredict('s1', { q1: 'a' }, project)
     expect(readState('s1')).toMatchObject({ level: 2, predicted: true })
+  })
+
+  it('turns spar on and off again', () => {
+    cmdEngage('s1', true, project)
+    expect(readState('s1').engaged).toBe(true)
+    cmdEngage('s1', false, project)
+    expect(readState('s1').engaged).toBe(false)
+  })
+
+  it('keeps one session out of what another session decided', () => {
+    cmdEngage('s1', true, project)
+    expect(readState('s2').engaged).toBe(false)
   })
 })
