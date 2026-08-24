@@ -20,10 +20,12 @@ export function writeTargets(command: string, cwd: string): string[] {
   }
 
   // Redirections. The negative lookbehind skips `2>&1` and the like, where the target is
-  // a file descriptor rather than a file.
-  for (const m of command.matchAll(/(?<![0-9&])>>?\s*("[^"]+"|'[^']+'|[^\s;&|<>()]+)/g)) add(m[1])
+  // a file descriptor rather than a file. It also skips the arrows and comparisons that
+  // turn up constantly in prose and in code being echoed or grepped: `->`, `=>`, `>=`.
+  // None of those is a redirect, and treating one as a write gates an ordinary read.
+  for (const m of command.matchAll(/(?<![0-9&=-])>>?(?!=)\s*("[^"\n]+"|'[^'\n]+'|[^\s;&|<>()]+)/g)) add(m[1])
 
-  for (const m of command.matchAll(/\btee\b\s+(?:-a\s+)?("[^"]+"|'[^']+'|[^\s;&|<>]+)/g)) add(m[1])
+  for (const m of command.matchAll(/\btee\b\s+(?:-a\s+)?("[^"\n]+"|'[^'\n]+'|[^\s;&|<>]+)/g)) add(m[1])
 
   // sed -i and perl -i rewrite their operands. Take every trailing path-like argument,
   // skipping the flags and the script itself.
@@ -43,12 +45,12 @@ export function writeTargets(command: string, cwd: string): string[] {
     if (args.length >= 2) add(args.at(-1))
   }
 
-  for (const m of command.matchAll(/\bdd\b[^\n;&|]*\bof=("[^"]+"|'[^']+'|[^\s;&|]+)/g)) add(m[1])
+  for (const m of command.matchAll(/\bdd\b[^\n;&|]*\bof=("[^"\n]+"|'[^'\n]+'|[^\s;&|]+)/g)) add(m[1])
 
   // Interpreter one-liners. Only the two unambiguous shapes: opening a path for writing,
   // and the Node write helpers.
-  for (const m of command.matchAll(/open\(\s*("[^"]+"|'[^']+')\s*,\s*['"][wa]/g)) add(m[1])
-  for (const m of command.matchAll(/write(?:File)?(?:Sync)?\(\s*("[^"]+"|'[^']+')/g)) add(m[1])
+  for (const m of command.matchAll(/open\(\s*("[^"\n]+"|'[^'\n]+')\s*,\s*['"][wa]/g)) add(m[1])
+  for (const m of command.matchAll(/write(?:File)?(?:Sync)?\(\s*("[^"\n]+"|'[^'\n]+')/g)) add(m[1])
 
   return [...found]
 }
