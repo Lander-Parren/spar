@@ -64,4 +64,24 @@ describe('things it must leave alone', () => {
   it('a comparison operator', () => {
     expect(at('[ "$a" -gt 3 ] && echo yes')).toEqual([])
   })
+
+  it('an arrow, which is prose and not a redirect', () => {
+    expect(at('echo "SessionStart -> due"')).toEqual([])
+    expect(at('echo "a => b"')).toEqual([])
+    expect(at('echo "count >= 3"')).toEqual([])
+  })
+
+  it('an arrow inside a pattern being searched for', () => {
+    // A grep for an arrow function is the commonest read in a TypeScript repo. Gating it
+    // teaches nothing and is the fastest way to get the whole gate switched off.
+    expect(at('grep -n "() => {" src/foo.ts')).toEqual([])
+    expect(at("rg --json 'a -> b' src")).toEqual([])
+  })
+
+  it('a quoted target never runs past its own line', () => {
+    // `'[^']+'` with no newline bound swallows everything up to the next quote, which
+    // turns one stray `>` into a multi-line blob that still resolves under cwd.
+    const cmd = ["X=$(printf '%s' '>')", "echo 'unrelated'"].join('\n')
+    for (const target of at(cmd)) expect(target).not.toContain('\n')
+  })
 })
