@@ -24,6 +24,10 @@ decide to work hard.
 ## What it looks like
 
 ```
+› /spar
+
+  spar is on for this session. The gate will ask on the next write
+
 › add an endpoint for cancelling an order
 
   spar: level 2 (skeleton), 2 open gaps on "transaction boundaries in an ORM"
@@ -70,6 +74,15 @@ spar setup --project /path/to/repo --stack ".NET"
 That last line matters: **nothing happens in a directory you have not named.** A fresh
 install is completely inert. It will not even create `~/.spar` until you point it at a
 project.
+
+Naming a project is necessary but not sufficient. **spar also waits to be invited into a
+session.** Say `/spar`, or ask to be sparred with, and the skill turns the gate on for that
+session; until then every write goes through untouched. If you would rather be gated
+unconditionally, the way spar worked before 0.5.0:
+
+```sh
+spar activation always
+```
 
 `spar install` is careful with files it did not write. It merges into what is already
 there, backs the file up first, and only ever replaces entries it put there itself. Run it
@@ -157,9 +170,17 @@ spar setup --project "$(pwd)" --test-command "npm test"
 That check is off by default. Running someone else's suite automatically is invasive and
 can be slow.
 
-There is no off switch, only level 0. Your own gap log suggests the level and tells you why,
-and you can always overrule it. Overrules get counted, because someone constantly correcting
-the suggestion is telling you the thresholds are wrong.
+Within a session there is no off switch, only level 0. Your own gap log suggests the level
+and tells you why, and you can always overrule it. Overrules get counted, because someone
+constantly correcting the suggestion is telling you the thresholds are wrong.
+
+Getting into the session at all is the part you control, and that is a real concession.
+An involuntary gate catches you exactly when you are busy, which is when the learning is
+worth the most and when you are least willing to pay for it. A tool you have to invite in
+will get left uninvited on precisely those days. It is still the better trade, because the
+version that fought you every time got switched off completely, and a tool nobody runs
+teaches nothing at all. `spar activation always` is there when you want the old bargain
+back, and `spar off` is there when you want out of a session you already started.
 
 ## Working a ticket in steps
 
@@ -224,7 +245,8 @@ gate opens and you carry on. A learning tool should never be the reason you cann
 <details>
 <summary><b>How often the gate actually fires</b></summary>
 
-Once per task, not once per file. Fifteen edits behind one prediction is one gate.
+Once per session it is asked into, then once per task inside it, not once per file. Fifteen
+edits behind one prediction is one gate.
 
 It watches shell commands as well as write tools, because an agent reaches for
 `cat > file <<EOF` or `perl -0pi` far more often than for a dedicated write tool, and some
@@ -266,8 +288,9 @@ cd example
 spar setup --project "$(pwd)" --stack "TypeScript"
 ```
 
-Then ask your agent to add order cancellation and watch the gate stop it. `example/README.md`
-explains what to look for.
+Then say `/spar`, ask your agent to add order cancellation, and watch the gate stop it.
+Without that first word nothing will happen, which is the point of the default and not a
+broken install. `example/README.md` explains what to look for.
 
 ## Where the instructions live
 
