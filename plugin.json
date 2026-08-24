@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "spar",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Keep learning while AI writes the code. Predict before you are told, then turn every gap between your model and reality into a curriculum.",
   "author": {
     "name": "Lander Parren"
