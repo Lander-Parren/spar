@@ -78,6 +78,16 @@ describe('things it must leave alone', () => {
     expect(at("rg --json 'a -> b' src")).toEqual([])
   })
 
+  it('an angle-bracketed token, which closes a pair rather than opening a redirect', () => {
+    // The commit trailer is the one that bites: written through a heredoc, the closing
+    // bracket of the address sits before whitespace and a word, so the delimiter itself
+    // was read as the file being written.
+    const commit = ["git commit -F - <<'EOF'", 'a subject', '', 'Co-Authored-By: A B <a@b.com>', 'EOF'].join('\n')
+    expect(at(commit)).toEqual([])
+    expect(at('echo "see <https://example.com> for detail"')).toEqual([])
+    expect(at('echo "Promise<void> resolves once"')).toEqual([])
+  })
+
   it('a quoted target never runs past its own line', () => {
     // `'[^']+'` with no newline bound swallows everything up to the next quote, which
     // turns one stray `>` into a multi-line blob that still resolves under cwd.
