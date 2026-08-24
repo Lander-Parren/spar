@@ -2,7 +2,7 @@
 
 The gate is dormant until a session turns it on, and the skill is what turns it on.
 
-Status: implemented on branch `skill-triggered`.
+Status: shipped in 0.5.0.
 
 ## Why
 

@@ -1,6 +1,6 @@
 {
   "name": "spar-agent",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Keep learning while AI writes the code. Predict before you're told, and turn every gap between your model and reality into a curriculum.",
   "keywords": [
     "agent-skills",
