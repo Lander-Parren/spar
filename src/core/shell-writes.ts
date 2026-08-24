@@ -19,11 +19,21 @@ export function writeTargets(command: string, cwd: string): string[] {
     if (path) found.add(isAbsolute(path) ? path : resolve(cwd, path))
   }
 
-  // Redirections. The negative lookbehind skips `2>&1` and the like, where the target is
-  // a file descriptor rather than a file. It also skips the arrows and comparisons that
+  // Redirections. The first lookbehind skips `2>&1` and the like, where the target is a
+  // file descriptor rather than a file. It also skips the arrows and comparisons that
   // turn up constantly in prose and in code being echoed or grepped: `->`, `=>`, `>=`.
   // None of those is a redirect, and treating one as a write gates an ordinary read.
-  for (const m of command.matchAll(/(?<![0-9&=-])>>?(?!=)\s*("[^"\n]+"|'[^'\n]+'|[^\s;&|<>()]+)/g)) add(m[1])
+  //
+  // The second skips a `>` that closes an angle-bracketed token, `<like@this.com>`. A
+  // commit written through a heredoc ends on a `Co-Authored-By:` trailer, and its closing
+  // bracket sits before whitespace and a word, which is the exact shape of `cmd > file`.
+  // The same covers `<https://example.com>` and `Promise<void>`. The cost is `<in.txt>out`,
+  // a real redirect written without spaces, which is now missed: the trade the whole file
+  // makes, since a missed write costs one gap and a gated read costs the tool.
+  for (const m of command.matchAll(
+    /(?<![0-9&=-])(?<!<[^\s<>]*)>>?(?!=)\s*("[^"\n]+"|'[^'\n]+'|[^\s;&|<>()]+)/g,
+  ))
+    add(m[1])
 
   for (const m of command.matchAll(/\btee\b\s+(?:-a\s+)?("[^"\n]+"|'[^'\n]+'|[^\s;&|<>]+)/g)) add(m[1])
 
